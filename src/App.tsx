@@ -6,6 +6,15 @@ import {
   useState,
   type ChangeEvent,
 } from 'react'
+import {
+  FixedBottomCTA,
+  List,
+  ListHeader,
+  ListRow,
+  Loader,
+  Result,
+  Top,
+} from '@toss/tds-mobile'
 import './App.css'
 import {
   FetchAlbumPhotosPermissionError,
@@ -45,22 +54,26 @@ const runtimeCopy: Record<
     badge: string
     helper: string
     pickerLabel: string
+    emptyDescription: string
   }
 > = {
   browser: {
-    badge: 'Browser Preview',
-    helper: '브라우저에서는 기기 파일을 여러 장 한 번에 올려볼 수 있어요.',
-    pickerLabel: '기기에서 사진 가져오기',
+    badge: '브라우저 미리보기',
+    helper: '브라우저에서는 기기 사진첩 대신 파일 선택기로 흐름을 검증할 수 있어요.',
+    pickerLabel: '사진 파일 선택하기',
+    emptyDescription: '기기 사진첩 대신 테스트할 사진 파일을 골라 흐름을 확인해 보세요.',
   },
   sandbox: {
-    badge: 'Sandbox',
-    helper: '샌드박스에서는 토스 사진첩 흐름을 미리 확인할 수 있어요.',
-    pickerLabel: '토스 사진첩에서 가져오기',
+    badge: '샌드박스',
+    helper: '샌드박스에서는 Toss 사진첩 권한과 선택 흐름을 실제와 가깝게 점검할 수 있어요.',
+    pickerLabel: 'Toss 사진첩에서 가져오기',
+    emptyDescription: '샌드박스에서 사진첩 권한과 선택 흐름을 먼저 검증해 보세요.',
   },
   toss: {
-    badge: 'Toss App',
-    helper: '토스 안에서는 사진첩에서 바로 여러 장을 고를 수 있어요.',
-    pickerLabel: '토스 사진첩에서 가져오기',
+    badge: 'Toss 앱',
+    helper: 'Toss 앱 안에서 사진 선택부터 결과 확인까지 실제 사용자 흐름으로 점검할 수 있어요.',
+    pickerLabel: 'Toss 사진첩에서 가져오기',
+    emptyDescription: '토스 앱 안에서 사진첩에서 사진을 고르고 바로 타임라인 결과를 확인해 보세요.',
   },
 }
 
@@ -120,11 +133,13 @@ function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const copy = runtimeCopy[runtime]
-  const heroCount = deferredPhotos.length
+  const photoCount = deferredPhotos.length
   const timelineCount = state.timeline.length
-  const samplePhotos = deferredPhotos.slice(0, 7)
-  const remainingPhotos = deferredPhotos.length - samplePhotos.length
+  const samplePhotos = deferredPhotos.slice(0, 6)
+  const remainingPhotos = Math.max(0, deferredPhotos.length - samplePhotos.length)
   const canCreateTimeline = deferredPhotos.length > 0 && state.status !== 'clustering'
+  const statusMessage = getStatusMessage(state)
+  const primaryCtaLabel = getPrimaryCtaLabel(state, copy)
 
   const handlePickPhotos = async () => {
     if (state.status === 'clustering') {
@@ -209,239 +224,288 @@ function App() {
     }
   }
 
-  const statusMessage = getStatusMessage(state)
+  const handlePrimaryAction = async () => {
+    if (state.status === 'clustering') {
+      return
+    }
+
+    if (timelineCount > 0) {
+      await handlePickPhotos()
+      return
+    }
+
+    if (photoCount > 0) {
+      await handleCreateTimeline()
+      return
+    }
+
+    await handlePickPhotos()
+  }
+
+  const showPreparationState =
+    photoCount > 0 && timelineCount === 0 && state.status !== 'clustering' && state.status !== 'error'
 
   return (
     <main className="app-shell">
       <div className="screen-shell">
-        <section className="hero-section">
-          <div className="hero-badge-row">
-            <span className="runtime-badge">{copy.badge}</span>
-            <span className="surface-badge">Momentbook Mini</span>
-          </div>
-
-          <div className="hero-copy">
-            <p className="section-label">Photo clustering</p>
-            <h1>사진 묶음을 장면별 타임라인으로 정리해요</h1>
-            <p className="hero-description">
-              여러 장을 한 번에 가져오면 가까운 순간끼리 묶어, 훑어보기 쉬운 타임라인으로 바로 보여줘요.
-            </p>
-          </div>
-        </section>
-
-        <section className="summary-card">
-          <article className="summary-metric">
-            <span>선택한 사진</span>
-            <strong>{formatCount(heroCount, '장')}</strong>
-            <small>{heroCount > 0 ? '한 번에 정리할 사진이에요.' : '아직 가져온 사진이 없어요.'}</small>
-          </article>
-
-          <article className="summary-metric">
-            <span>현재 단계</span>
-            <strong>{getStatusLabel(state.status)}</strong>
-            <small>{statusMessage}</small>
-          </article>
-
-          <article className="summary-metric">
-            <span>타임라인 묶음</span>
-            <strong>{formatCount(timelineCount, '개')}</strong>
-            <small>{timelineCount > 0 ? '장면 단위로 묶은 결과예요.' : '결과를 만들면 여기에 보여줘요.'}</small>
-          </article>
-        </section>
-
-        <section className="flow-card">
-          <div className="section-heading">
-            <div>
-              <p className="section-label">1. 사진 가져오기</p>
-              <h2>한 번에 고르고 바로 시작해요</h2>
-            </div>
-            <span className="step-chip">{copy.badge}</span>
-          </div>
-
-          <p className="section-copy">{copy.helper}</p>
-
-          <div className="cta-row">
-            <button
-              className="primary-button"
-              type="button"
-              onClick={() => void handlePickPhotos()}
-              disabled={state.status === 'clustering'}
-            >
-              {heroCount > 0 ? '사진 다시 고르기' : copy.pickerLabel}
-            </button>
-
-            {heroCount > 0 ? (
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() => void handleCreateTimeline()}
-                disabled={!canCreateTimeline}
-              >
-                타임라인 만들기
-              </button>
-            ) : null}
-          </div>
-        </section>
-
-        <section className="progress-card">
-          <div className="section-heading">
-            <div>
-              <p className="section-label">2. 진행 상태</p>
-              <h2>한 화면에서 흐름을 바로 확인해요</h2>
-            </div>
-          </div>
-
-          <div className="step-list" aria-label="진행 단계">
-            <StepItem
-              title="사진 선택"
-              description="사진 묶음을 고르고 바로 확인해요."
-              state={heroCount > 0 ? 'done' : 'active'}
-            />
-            <StepItem
-              title="서버 클러스터링"
-              description="가까운 장면끼리 묶어 구조를 만들어요."
-              state={getClusterStepState(state)}
-            />
-            <StepItem
-              title="타임라인 확인"
-              description="묶음별로 빠르게 훑고 다시 고를 수 있어요."
-              state={timelineCount > 0 ? 'done' : 'idle'}
-            />
-          </div>
-
-          {state.status === 'clustering' ? (
-            <div className="processing-card" aria-live="polite">
-              <div className="processing-bar" aria-hidden="true">
-                <span />
+        <section className="surface-card">
+          <Top
+            upper={
+              <div className="top-badge-row">
+                <span className="top-badge top-badge--brand">Momentbook</span>
+                <span className="top-badge">{copy.badge}</span>
+                {state.resultMode === 'demo' ? (
+                  <span className="top-badge top-badge--demo">Demo</span>
+                ) : null}
               </div>
-              <strong>사진을 보내고 장면을 정리하고 있어요</strong>
-              <p>선택한 순서와 촬영 정보를 함께 보고 타임라인 구조를 만들고 있어요.</p>
-            </div>
-          ) : null}
+            }
+            title={<Top.TitleParagraph>사진을 순간별 타임라인으로 정리해요</Top.TitleParagraph>}
+            subtitleBottom={
+              <Top.SubtitleParagraph>{copy.helper}</Top.SubtitleParagraph>
+            }
+            right={
+              photoCount > 0 && state.status !== 'clustering' ? (
+                <Top.RightButton
+                  variant="weak"
+                  size="small"
+                  onClick={() => void handlePickPhotos()}
+                >
+                  사진 다시 선택
+                </Top.RightButton>
+              ) : undefined
+            }
+            lower={
+              <div className="hero-metrics">
+                <div className="hero-metric">
+                  <span>선택 사진</span>
+                  <strong>{formatCount(photoCount, '장')}</strong>
+                </div>
+                <div className="hero-metric">
+                  <span>현재 상태</span>
+                  <strong>{getStatusLabel(state.status)}</strong>
+                </div>
+                <div className="hero-metric">
+                  <span>타임라인 묶음</span>
+                  <strong>{formatCount(timelineCount, '개')}</strong>
+                </div>
+              </div>
+            }
+          />
         </section>
 
-        <section className="selection-card">
-          <div className="section-heading">
-            <div>
-              <p className="section-label">3. 선택한 사진</p>
-              <h2>{heroCount > 0 ? `${formatCount(heroCount, '장')}을 바로 훑어봐요` : '사진을 가져오면 여기에 보여줘요'}</h2>
-            </div>
-            {heroCount > 0 ? <span className="count-pill">{formatPhotoRange(deferredPhotos)}</span> : null}
-          </div>
+        <section className="surface-card">
+          <ListHeader
+            title={
+              <ListHeader.TitleParagraph typography="t5" fontWeight="bold">
+                진행 상태
+              </ListHeader.TitleParagraph>
+            }
+            description={
+              <ListHeader.DescriptionParagraph>{statusMessage}</ListHeader.DescriptionParagraph>
+            }
+          />
 
-          {heroCount > 0 ? (
+          <List>
+            <ListRow
+              left={
+                <ListRow.AssetText shape="squircle" size="medium">
+                  사진
+                </ListRow.AssetText>
+              }
+              contents={
+                <ListRow.Texts
+                  type="2RowTypeA"
+                  top="선택한 사진"
+                  bottom={
+                    photoCount > 0 ? formatPhotoRange(deferredPhotos) : '아직 선택한 사진이 없어요.'
+                  }
+                />
+              }
+              right={<span className="info-pill">{formatCount(photoCount, '장')}</span>}
+            />
+            <ListRow
+              left={
+                <ListRow.AssetText shape="squircle" size="medium">
+                  상태
+                </ListRow.AssetText>
+              }
+              contents={
+                <ListRow.Texts
+                  type="2RowTypeA"
+                  top="생성 상태"
+                  bottom={statusMessage}
+                />
+              }
+              right={<span className={`status-pill is-${state.status}`}>{getStatusLabel(state.status)}</span>}
+            />
+            <ListRow
+              left={
+                <ListRow.AssetText shape="squircle" size="medium">
+                  결과
+                </ListRow.AssetText>
+              }
+              contents={
+                <ListRow.Texts
+                  type="2RowTypeA"
+                  top="타임라인 결과"
+                  bottom={getResultModeCopy(state.resultMode, timelineCount)}
+                />
+              }
+              right={<span className="info-pill">{formatCount(timelineCount, '개')}</span>}
+            />
+          </List>
+        </section>
+
+        {state.status === 'clustering' ? (
+          <section className="surface-card">
+            <div className="loader-panel" aria-live="polite">
+              <Loader label="사진을 정리하고 있어요" size="large" type="primary" />
+              <p className="support-copy">
+                선택한 순서와 촬영 시점을 바탕으로 시간 흐름이 자연스러운 묶음을 만드는 중이에요.
+              </p>
+            </div>
+          </section>
+        ) : null}
+
+        {state.status === 'error' ? (
+          <section className="surface-card">
+            <Result
+              title="작업을 완료하지 못했어요"
+              description={state.errorMessage ?? '잠시 후 다시 시도해 주세요.'}
+            />
+          </section>
+        ) : null}
+
+        <section className="surface-card">
+          <ListHeader
+            title={
+              <ListHeader.TitleParagraph typography="t5" fontWeight="bold">
+                선택한 사진
+              </ListHeader.TitleParagraph>
+            }
+            description={
+              <ListHeader.DescriptionParagraph>
+                {photoCount > 0
+                  ? '대표 사진만 먼저 보여주고, 전체 선택은 타임라인 생성에 그대로 반영해요.'
+                  : copy.emptyDescription}
+              </ListHeader.DescriptionParagraph>
+            }
+            right={
+              photoCount > 0 ? (
+                <ListHeader.RightText typography="t7">
+                  {formatPhotoRange(deferredPhotos)}
+                </ListHeader.RightText>
+              ) : undefined
+            }
+          />
+
+          {photoCount > 0 ? (
             <>
+              <div className="selection-summary">
+                <strong>{formatCount(photoCount, '장')} 선택됨</strong>
+                <p className="support-copy">
+                  {runtime === 'browser'
+                    ? '브라우저에서는 업로드한 파일의 정보로 순서를 유지해 타임라인을 만들어요.'
+                    : 'Toss 사진첩에서 고른 순서와 사진 정보를 기준으로 타임라인을 만들어요.'}
+                </p>
+              </div>
+
               <div className="photo-grid">
                 {samplePhotos.map((photo, index) => (
-                  <figure className="photo-frame" key={photo.id}>
-                    <img src={photo.previewUrl} alt={`${index + 1}번째 선택한 사진`} loading="lazy" />
+                  <figure className="photo-card" key={photo.id}>
+                    <img src={photo.previewUrl} alt={`선택한 사진 ${index + 1}`} loading="lazy" />
                   </figure>
                 ))}
 
                 {remainingPhotos > 0 ? (
-                  <div className="photo-frame photo-frame-more" aria-label={`추가 사진 ${remainingPhotos}장`}>
+                  <div className="photo-card photo-card--more" aria-label={`추가 사진 ${remainingPhotos}장`}>
                     <span>+{remainingPhotos}</span>
                   </div>
                 ) : null}
               </div>
-
-              <p className="selection-note">
-                {runtime === 'browser'
-                  ? '브라우저에서는 파일 메타데이터를 기준으로 흐름을 정리해요.'
-                  : '토스 사진첩에서는 선택한 순서를 유지해 흐름을 정리해요.'}
-              </p>
             </>
           ) : (
-            <div className="empty-panel">
-              <strong>사진을 먼저 가져와 주세요</strong>
-              <p>가장 먼저 할 일은 사진 묶음을 선택하는 거예요. 가져온 뒤에는 바로 타임라인을 만들 수 있어요.</p>
-            </div>
+            <Result
+              title="먼저 사진을 불러와 주세요"
+              description="사진을 고르면 하단의 기본 액션으로 바로 타임라인을 만들 수 있어요."
+            />
           )}
         </section>
 
-        <section className="status-card" aria-live="polite">
-          <div className={`notice-card${state.status === 'error' ? ' is-error' : ''}`}>
-            <p className="section-label">안내</p>
-            <strong>{statusMessage}</strong>
-            {state.resultMode === 'demo' ? (
-              <p className="notice-copy">
-                현재 레포에는 실제 서버 주소가 없어서, `VITE_MOMENTBOOK_CLUSTER_ENDPOINT`가 없으면 데모 클러스터링으로 흐름을 보여줘요.
-              </p>
-            ) : null}
-          </div>
-        </section>
+        {showPreparationState ? (
+          <section className="surface-card">
+            <Result
+              title="선택은 끝났어요"
+              description="하단 버튼을 눌러 시간 흐름 기준의 타임라인을 생성해 보세요."
+            />
+          </section>
+        ) : null}
 
         {timelineCount > 0 ? (
-          <section className="timeline-card-section">
-            <div className="section-heading">
-              <div>
-                <p className="section-label">4. 결과 타임라인</p>
-                <h2>장면별로 묶은 흐름을 바로 훑어봐요</h2>
-              </div>
-              <span className="count-pill">{formatCount(timelineCount, '개 묶음')}</span>
-            </div>
+          <section className="surface-card">
+            <ListHeader
+              title={
+                <ListHeader.TitleParagraph typography="t5" fontWeight="bold">
+                  생성된 타임라인
+                </ListHeader.TitleParagraph>
+              }
+              description={
+                <ListHeader.DescriptionParagraph>
+                  {state.resultMode === 'demo'
+                    ? '클러스터링 서버 주소가 없어 데모 규칙으로 묶은 결과를 보여주고 있어요.'
+                    : '사진이 시간 흐름과 맥락에 따라 묶여 한눈에 보이도록 정리됐어요.'}
+                </ListHeader.DescriptionParagraph>
+              }
+              right={
+                <ListHeader.RightText typography="t7">
+                  {formatCount(timelineCount, '개')}
+                </ListHeader.RightText>
+              }
+            />
 
-            <ol className="timeline-list">
+            <div className="timeline-stack">
               {state.timeline.map((cluster, index) => (
-                <li className="timeline-item" key={cluster.id}>
-                  <div className="timeline-node" aria-hidden="true" />
-
-                  <article className="timeline-panel">
-                    <div className="timeline-panel-top">
-                      <div>
-                        <p className="timeline-order">묶음 {String(index + 1).padStart(2, '0')}</p>
-                        <h3>{cluster.title}</h3>
-                      </div>
-                      <span className="count-pill">{formatCount(cluster.photos.length, '장')}</span>
+                <article className="timeline-card" key={cluster.id}>
+                  <div className="timeline-card-head">
+                    <div>
+                      <p className="eyebrow">묶음 {String(index + 1).padStart(2, '0')}</p>
+                      <h3>{cluster.title}</h3>
                     </div>
+                    <span className="info-pill">{formatCount(cluster.photos.length, '장')}</span>
+                  </div>
 
-                    <p className="timeline-summary">{cluster.summary}</p>
+                  <p className="timeline-summary">{cluster.summary}</p>
 
-                    <div className="timeline-meta">
-                      <span>{formatClusterWindow(cluster)}</span>
-                      <span>{cluster.photos[0]?.source === 'browser' ? '파일 기준 정리' : '사진첩 기준 정리'}</span>
-                    </div>
+                  <div className="timeline-meta">
+                    <span>{formatClusterWindow(cluster)}</span>
+                    <span>{cluster.photos[0]?.source === 'browser' ? '브라우저 파일' : 'Toss 사진첩'}</span>
+                  </div>
 
-                    <div className="timeline-strip">
-                      {cluster.photos.slice(0, 4).map((photo, photoIndex) => (
-                        <figure className="timeline-photo" key={`${cluster.id}-${photo.id}`}>
-                          <img src={photo.previewUrl} alt={`${cluster.title} 대표 사진 ${photoIndex + 1}`} loading="lazy" />
-                        </figure>
-                      ))}
-                    </div>
-                  </article>
-                </li>
+                  <div className="timeline-preview-grid">
+                    {cluster.photos.slice(0, 4).map((photo, photoIndex) => (
+                      <figure className="timeline-preview" key={`${cluster.id}-${photo.id}`}>
+                        <img
+                          src={photo.previewUrl}
+                          alt={`${cluster.title} 대표 사진 ${photoIndex + 1}`}
+                          loading="lazy"
+                        />
+                      </figure>
+                    ))}
+                  </div>
+                </article>
               ))}
-            </ol>
+            </div>
           </section>
         ) : null}
       </div>
 
-      {heroCount > 0 ? (
-        <div className="bottom-cta-shell">
-          <div className="bottom-cta">
-            <div className="bottom-cta-copy">
-              <strong>{timelineCount > 0 ? '새 사진 묶음으로 다시 만들어요' : '이제 타임라인을 만들 차례예요'}</strong>
-              <span>
-                {timelineCount > 0
-                  ? '다른 사진 묶음을 고르면 같은 흐름으로 바로 다시 볼 수 있어요.'
-                  : '다음 버튼을 누르면 선택한 사진을 서버 흐름으로 묶어줘요.'}
-              </span>
-            </div>
-
-            <button
-              className="bottom-cta-button"
-              type="button"
-              onClick={() =>
-                void (timelineCount > 0 ? handlePickPhotos() : handleCreateTimeline())
-              }
-              disabled={timelineCount === 0 && !canCreateTimeline}
-            >
-              {timelineCount > 0 ? '새 사진 가져오기' : '타임라인 만들기'}
-            </button>
-          </div>
-        </div>
-      ) : null}
+      <FixedBottomCTA
+        loading={state.status === 'clustering'}
+        disabled={state.status === 'clustering'}
+        onClick={() => void handlePrimaryAction()}
+      >
+        {primaryCtaLabel}
+      </FixedBottomCTA>
 
       <input
         ref={fileInputRef}
@@ -455,34 +519,32 @@ function App() {
   )
 }
 
-function StepItem({
-  title,
-  description,
-  state,
-}: {
-  title: string
-  description: string
-  state: 'idle' | 'active' | 'done'
-}) {
-  return (
-    <article className={`step-item is-${state}`}>
-      <span className="step-state" aria-hidden="true" />
-      <strong>{title}</strong>
-      <p>{description}</p>
-    </article>
-  )
+function getPrimaryCtaLabel(state: MomentbookState, copy: (typeof runtimeCopy)[RuntimeEnvironment]) {
+  if (state.status === 'clustering') {
+    return '타임라인 만드는 중'
+  }
+
+  if (state.timeline.length > 0) {
+    return '다른 사진 고르기'
+  }
+
+  if (state.photos.length > 0) {
+    return state.status === 'error' ? '타임라인 다시 만들기' : '타임라인 만들기'
+  }
+
+  return copy.pickerLabel
 }
 
 function getPhotoSelectionMessage(error: unknown) {
   if (error instanceof FetchAlbumPhotosPermissionError) {
-    return '사진첩 권한을 허용하면 사진을 바로 가져올 수 있어요.'
+    return '사진첩 권한을 허용하면 사진을 바로 불러올 수 있어요.'
   }
 
   if (error instanceof Error && error.message.trim().length > 0) {
     return error.message
   }
 
-  return '사진을 가져오지 못했어요. 다시 시도해 주세요.'
+  return '사진을 불러오지 못했어요. 다시 시도해 주세요.'
 }
 
 function getClusteringMessage(error: unknown) {
@@ -496,47 +558,51 @@ function getClusteringMessage(error: unknown) {
 function getStatusLabel(status: FlowStatus) {
   switch (status) {
     case 'idle':
-      return '준비 완료'
+      return '준비 중'
     case 'ready':
-      return '사진 선택 완료'
+      return '생성 가능'
     case 'clustering':
-      return '클러스터링 중'
+      return '생성 중'
     case 'complete':
-      return '결과 준비 완료'
+      return '완료'
     case 'error':
-      return '다시 확인 필요'
+      return '재시도 필요'
     default:
-      return '준비 완료'
+      return '준비 중'
   }
 }
 
 function getStatusMessage(state: MomentbookState) {
   switch (state.status) {
     case 'idle':
-      return '사진 묶음을 가져오면 바로 타임라인 흐름을 만들 수 있어요.'
+      return '사진을 고르면 바로 시간 흐름 기준의 타임라인을 만들 수 있어요.'
     case 'ready':
-      return `${formatCount(state.photos.length, '장')}을 가져왔어요. 이제 타임라인을 만들어요.`
+      return `${formatCount(state.photos.length, '장')}이 준비됐어요. 이제 타임라인을 생성해 보세요.`
     case 'clustering':
-      return '서버에서 가까운 장면끼리 묶고 있어요.'
+      return '선택한 사진을 시간 흐름과 장면 맥락 기준으로 정리하고 있어요.'
     case 'complete':
-      return `${formatCount(state.timeline.length, '개 묶음')}으로 정리했어요. 바로 훑어볼 수 있어요.`
+      return `${formatCount(state.timeline.length, '개')}의 묶음으로 정리됐어요.`
     case 'error':
-      return state.errorMessage ?? '다시 시도해 주세요.'
+      return state.errorMessage ?? '잠시 후 다시 시도해 주세요.'
     default:
       return ''
   }
 }
 
-function getClusterStepState(state: MomentbookState): 'idle' | 'active' | 'done' {
-  if (state.status === 'clustering') {
-    return 'active'
+function getResultModeCopy(mode: ClusterMode | null, timelineCount: number) {
+  if (timelineCount === 0) {
+    return '아직 생성된 타임라인이 없어요.'
   }
 
-  if (state.timeline.length > 0) {
-    return 'done'
+  if (mode === 'demo') {
+    return '데모 규칙으로 묶인 결과예요.'
   }
 
-  return 'idle'
+  if (mode === 'server') {
+    return '서버 응답으로 생성된 결과예요.'
+  }
+
+  return '타임라인 생성이 완료됐어요.'
 }
 
 function formatCount(count: number, unit: string) {
@@ -561,7 +627,7 @@ function formatPhotoRange(photos: PhotoAsset[]) {
 
 function formatClusterWindow(cluster: TimelineCluster) {
   if (cluster.startedAt == null || cluster.endedAt == null) {
-    return '선택한 순서 기준으로 묶었어요.'
+    return '선택 순서를 기준으로 묶였어요.'
   }
 
   const start = new Date(cluster.startedAt)
