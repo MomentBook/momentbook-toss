@@ -1,6 +1,8 @@
 import {
+  FetchAlbumPhotosPermissionError,
   Storage,
   env,
+  fetchAlbumPhotos,
   generateHapticFeedback,
   getAppsInTossGlobals,
   getDeviceId,
@@ -34,6 +36,13 @@ export interface RuntimeActionResult {
   message: string
 }
 
+export interface AlbumPhoto {
+  id: string
+  dataUrl: string
+}
+
+export { FetchAlbumPhotosPermissionError }
+
 export async function getRuntimeSnapshot(): Promise<RuntimeSnapshot> {
   const environment = getEnvironment()
   const globals = readConstant(getAppsInTossGlobals)
@@ -52,11 +61,28 @@ export async function getRuntimeSnapshot(): Promise<RuntimeSnapshot> {
   }
 }
 
+export function getRuntimeEnvironment(): RuntimeEnvironment {
+  return getEnvironment()
+}
+
+export async function fetchMomentbookAlbumPhotos(): Promise<AlbumPhoto[]> {
+  const photos = await fetchAlbumPhotos({
+    base64: true,
+    maxCount: 30,
+    maxWidth: 1440,
+  })
+
+  return photos.map((photo) => ({
+    id: photo.id,
+    dataUrl: `data:image/jpeg;base64,${photo.dataUri}`,
+  }))
+}
+
 export async function triggerSuccessHaptic(): Promise<RuntimeActionResult> {
   if (getEnvironment() === 'browser') {
     return {
       ok: false,
-      message: '로컬 브라우저에서는 햅틱 브리지를 호출할 수 없습니다.',
+      message: '브라우저 미리보기에서는 햅틱을 호출할 수 없어요.',
     }
   }
 
@@ -65,13 +91,13 @@ export async function triggerSuccessHaptic(): Promise<RuntimeActionResult> {
   if (result === null) {
     return {
       ok: false,
-      message: '햅틱 호출에 실패했습니다.',
+      message: '햅틱을 실행하지 못했어요.',
     }
   }
 
   return {
     ok: true,
-    message: '토스 브리지에 success 햅틱을 요청했습니다.',
+    message: '토스 앱에서 success 햅틱을 요청했어요.',
   }
 }
 
@@ -79,7 +105,7 @@ export async function persistLaunchMarker(): Promise<RuntimeActionResult> {
   if (getEnvironment() === 'browser') {
     return {
       ok: false,
-      message: 'Storage API는 샌드박스 또는 토스 앱 런타임에서만 확인할 수 있습니다.',
+      message: 'Storage API는 샌드박스 또는 토스 앱 런타임에서만 확인할 수 있어요.',
     }
   }
 
@@ -89,13 +115,13 @@ export async function persistLaunchMarker(): Promise<RuntimeActionResult> {
   if (result === null) {
     return {
       ok: false,
-      message: 'Storage 저장에 실패했습니다.',
+      message: '마지막 실행 시각을 저장하지 못했어요.',
     }
   }
 
   return {
     ok: true,
-    message: `실행 마커를 저장했습니다: ${marker}`,
+    message: `마지막 실행 시각을 저장했어요. ${marker}`,
   }
 }
 

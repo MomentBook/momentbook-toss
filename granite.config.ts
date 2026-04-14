@@ -7,7 +7,7 @@ export default defineConfig({
     primaryColor: '#0064FF',
     icon: '/momentbook-icon.svg',
   },
-  permissions: [],
+  permissions: [{ name: 'photos', access: 'read' }],
   navigationBar: {
     withBackButton: true,
     withHomeButton: true,

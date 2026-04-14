@@ -1,4 +1,7 @@
+@import '@toss/tds-colors/colors.css';
+
 :root {
+  color-scheme: light;
   font-family:
     'Pretendard Variable',
     'Pretendard',
@@ -8,10 +11,8 @@
     sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #111827;
-  background:
-    radial-gradient(circle at top, rgba(0, 100, 255, 0.12), transparent 36%),
-    linear-gradient(180deg, #eef4ff 0%, #f6f8fc 58%, #eef2f8 100%);
+  color: var(--grey900);
+  background: var(--grey50);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -31,6 +32,7 @@ body,
 body {
   margin: 0;
   min-width: 320px;
+  background: var(--grey50);
 }
 
 button,
@@ -42,4 +44,8 @@ select {
 
 button {
   cursor: pointer;
+}
+
+img {
+  max-width: 100%;
 }
