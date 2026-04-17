@@ -21,7 +21,7 @@ export function PublishScreen({
           <span className="section-badge section-badge--success">공개 준비 완료</span>
           <h2 className="hero-card__title">모먼트북 페이지가 준비됐어요.</h2>
           <p className="hero-card__description">
-            지금은 데모 흐름이라 실제 게시 대신 공개용 경로와 구성만 미리 보여드려요.
+            지금은 데모 흐름이라 실제 게시 대신 직접 구성한 공개용 경로와 화면만 미리 보여드려요.
           </p>
         </div>
       </section>
@@ -52,7 +52,7 @@ export function PublishScreen({
           <span className="section-badge">공개 전 확인</span>
           <h2 className="hero-card__title">이제 링크 한 장으로 여정을 보여줄 수 있어요.</h2>
           <p className="hero-card__description">
-            대표 이미지와 제목, 모먼트 구성을 공개용 페이지로 정리해드려요.
+            직접 묶은 순간과 대표 이미지를 공개용 페이지 형태로 정리해드려요.
           </p>
 
           {publishStatus === 'publishing' ? (
@@ -84,7 +84,7 @@ export function PublishScreen({
               <article className="info-card">
                 <p className="info-card__eyebrow">모먼트 카드</p>
                 <h4>핵심 장면을 카드형으로 묶어요</h4>
-                <p>{draft.timeline.length}개의 모먼트가 순서대로 이어져 읽기 쉬운 페이지가 돼요.</p>
+                <p>{draft.timeline.length}개의 순간이 순서대로 이어져 읽기 쉬운 페이지가 돼요.</p>
               </article>
 
               <article className="info-card">

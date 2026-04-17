@@ -34,42 +34,7 @@ export type JourneyDraft = {
   timeline: JourneyMoment[]
 }
 
-export type OrganizingStep = {
-  id: 'sorting' | 'grouping' | 'narrating'
-  title: string
-  description: string
-  durationMs: number
-}
-
-export const organizingSteps: OrganizingStep[] = [
-  {
-    id: 'sorting',
-    title: '촬영 순서대로 정렬하고 있어요',
-    description: '시간 정보를 기준으로 사진의 흐름을 먼저 맞추고 있어요.',
-    durationMs: 850,
-  },
-  {
-    id: 'grouping',
-    title: '비슷한 장면끼리 묶고 있어요',
-    description: '분위기와 구도를 살펴 여정의 모먼트 단위로 나누고 있어요.',
-    durationMs: 900,
-  },
-  {
-    id: 'narrating',
-    title: '공개하기 좋은 이야기로 다듬고 있어요',
-    description: '대표 사진과 제목을 골라 읽기 쉬운 타임라인으로 정리하고 있어요.',
-    durationMs: 950,
-  },
-]
-
-const momentTitles = ['여행의 시작', '머문 장면', '이어진 이동', '마무리한 순간']
-
-const momentSummaries = [
-  '여행이 시작되는 분위기가 자연스럽게 이어지도록 정리했어요.',
-  '머무른 장소와 비슷한 공기를 가진 사진을 한 장면으로 묶었어요.',
-  '이동하면서 달라지는 분위기가 끊기지 않도록 이어서 보여드려요.',
-  '기억에 오래 남을 마무리 장면을 마지막에 배치했어요.',
-]
+const momentTitles = ['순간 1', '순간 2', '순간 3', '순간 4']
 
 export async function readBrowserPhotoFiles(files: File[]): Promise<PhotoAsset[]> {
   return await Promise.all(
@@ -82,7 +47,7 @@ export async function readBrowserPhotoFiles(files: File[]): Promise<PhotoAsset[]
         dataUrl,
         fileName: file.name,
         mimeType: file.type || 'image/jpeg',
-        capturedAt: file.lastModified > 0 ? new Date(file.lastModified).toISOString() : null,
+        capturedAt: null,
         byteSize: file.size,
         source: 'browser' as const,
         sortOrder: index,
@@ -105,24 +70,99 @@ export function normalizeTossAlbumPhotos(albumPhotos: TossAlbumPhoto[]): PhotoAs
   }))
 }
 
-export function buildDummyJourneyDraft(photos: PhotoAsset[]): JourneyDraft {
-  const orderedPhotos = [...photos].sort(comparePhotos)
-  const timeline = createJourneyMoments(orderedPhotos)
-  const dateRange = formatPhotoRange(orderedPhotos)
-  const slug = buildJourneySlug(orderedPhotos)
+export function createEmptyJourneyMoments(): JourneyMoment[] {
+  return momentTitles.map((title, index) => ({
+    id: `moment-${index + 1}`,
+    title,
+    summary: '아직 사진을 담지 않았어요.',
+    startedAt: null,
+    endedAt: null,
+    photos: [],
+  }))
+}
+
+export function assignPhotosToJourneyMoment(
+  moments: JourneyMoment[],
+  photos: PhotoAsset[],
+  photoIds: string[],
+  momentId: string,
+) {
+  if (photoIds.length === 0) {
+    return moments
+  }
+
+  const photoIdSet = new Set(photoIds)
+  const selectedPhotos = photos.filter((photo) => photoIdSet.has(photo.id))
+
+  return moments.map((moment) => {
+    const remainingPhotos = moment.photos.filter((photo) => !photoIdSet.has(photo.id))
+
+    if (moment.id !== momentId) {
+      return {
+        ...moment,
+        photos: remainingPhotos,
+      }
+    }
+
+    return {
+      ...moment,
+      photos: [...remainingPhotos, ...selectedPhotos],
+    }
+  })
+}
+
+export function removePhotoFromJourneyMoment(
+  moments: JourneyMoment[],
+  momentId: string,
+  photoId: string,
+) {
+  return moments.map((moment) =>
+    moment.id === momentId
+      ? {
+          ...moment,
+          photos: moment.photos.filter((photo) => photo.id !== photoId),
+        }
+      : moment,
+  )
+}
+
+export function getUnassignedPhotos(photos: PhotoAsset[], moments: JourneyMoment[]) {
+  const assignedPhotoIds = new Set(
+    moments.flatMap((moment) => moment.photos.map((photo) => photo.id)),
+  )
+
+  return photos.filter((photo) => !assignedPhotoIds.has(photo.id))
+}
+
+export function buildJourneyDraft(
+  photos: PhotoAsset[],
+  moments: JourneyMoment[],
+): JourneyDraft {
+  const timeline = moments
+    .filter((moment) => moment.photos.length > 0)
+    .map((moment, index, filteredMoments) => ({
+      ...moment,
+      id: `moment-${index + 1}`,
+      title: momentTitles[index] ?? `순간 ${index + 1}`,
+      summary: buildMomentSummary(moment.photos.length, index, filteredMoments.length),
+      startedAt: null,
+      endedAt: null,
+    }))
+  const slug = buildJourneySlug(photos)
 
   return {
     id: `journey-${slug}`,
     title:
-      orderedPhotos.length === 0
+      photos.length === 0
         ? '비어 있는 여정'
-        : dateRange === '촬영 정보가 없는 사진이에요'
-          ? `${orderedPhotos.length}장의 사진으로 만든 여정`
-          : `${dateRange} 여행`,
-    subtitle: `${orderedPhotos.length}장의 사진을 ${timeline.length}개의 모먼트로 정리했어요.`,
+        : `${photos.length}장의 사진으로 만든 여정`,
+    subtitle:
+      timeline.length === 0
+        ? '사진을 순간에 담아 여정의 흐름을 만들어 보세요.'
+        : `${photos.length}장의 사진을 ${timeline.length}개의 순간으로 나눴어요.`,
     slug,
     previewPath: `/journeys/${slug}`,
-    coverPhoto: timeline[0]?.photos[0] ?? orderedPhotos[0] ?? null,
+    coverPhoto: timeline[0]?.photos[0] ?? photos[0] ?? null,
     timeline,
   }
 }
@@ -152,7 +192,7 @@ export function formatPhotoRange(photos: PhotoAsset[]) {
 
 export function formatMomentWindow(moment: JourneyMoment) {
   if (moment.startedAt == null || moment.endedAt == null) {
-    return '촬영 시간이 없는 사진을 모아두었어요.'
+    return `${moment.photos.length}장의 사진을 한 흐름으로 묶었어요.`
   }
 
   const start = new Date(moment.startedAt)
@@ -194,53 +234,6 @@ async function readDataUrl(file: File) {
   })
 }
 
-function createJourneyMoments(photos: PhotoAsset[]) {
-  if (photos.length === 0) {
-    return []
-  }
-
-  const groupCount = Math.min(4, Math.max(1, Math.ceil(photos.length / 4)))
-  const chunkSize = Math.ceil(photos.length / groupCount)
-  const timeline: JourneyMoment[] = []
-
-  for (let index = 0; index < groupCount; index += 1) {
-    const groupedPhotos = photos.slice(index * chunkSize, (index + 1) * chunkSize)
-
-    if (groupedPhotos.length === 0) {
-      continue
-    }
-
-    const bounds = inferBounds(groupedPhotos)
-
-    timeline.push({
-      id: `moment-${index + 1}`,
-      title: momentTitles[index] ?? `정리된 순간 ${index + 1}`,
-      summary:
-        momentSummaries[index] ??
-        `${groupedPhotos.length}장의 사진이 자연스럽게 이어지도록 하나의 흐름으로 묶었어요.`,
-      startedAt: bounds.startedAt,
-      endedAt: bounds.endedAt,
-      photos: groupedPhotos,
-    })
-  }
-
-  return timeline
-}
-
-function inferBounds(photos: PhotoAsset[]) {
-  const timestamps = photos
-    .map((photo) => photo.capturedAt)
-    .filter((capturedAt): capturedAt is string => capturedAt != null)
-    .map((capturedAt) => new Date(capturedAt))
-    .filter((date) => !Number.isNaN(date.getTime()))
-    .sort((left, right) => left.getTime() - right.getTime())
-
-  return {
-    startedAt: timestamps[0]?.toISOString() ?? null,
-    endedAt: timestamps[timestamps.length - 1]?.toISOString() ?? null,
-  }
-}
-
 function buildJourneySlug(photos: PhotoAsset[]) {
   const datedPhoto = photos.find((photo) => photo.capturedAt != null)
   const dateLabel =
@@ -251,17 +244,20 @@ function buildJourneySlug(photos: PhotoAsset[]) {
   return `momentbook-${dateLabel}-${photos.length}`
 }
 
-function comparePhotos(left: PhotoAsset, right: PhotoAsset) {
-  const leftTime =
-    left.capturedAt == null ? Number.MAX_SAFE_INTEGER : new Date(left.capturedAt).getTime()
-  const rightTime =
-    right.capturedAt == null ? Number.MAX_SAFE_INTEGER : new Date(right.capturedAt).getTime()
-
-  if (leftTime !== rightTime) {
-    return leftTime - rightTime
+function buildMomentSummary(photoCount: number, index: number, totalMomentCount: number) {
+  if (totalMomentCount === 1) {
+    return `${photoCount}장의 사진을 한 장면으로 정리했어요.`
   }
 
-  return left.sortOrder - right.sortOrder
+  if (index === 0) {
+    return `${photoCount}장의 사진으로 여정의 시작 장면을 만들었어요.`
+  }
+
+  if (index === totalMomentCount - 1) {
+    return `${photoCount}장의 사진으로 마무리 장면을 구성했어요.`
+  }
+
+  return `${photoCount}장의 사진이 자연스럽게 이어지도록 한 순간으로 담았어요.`
 }
 
 function formatShortDate(date: Date) {

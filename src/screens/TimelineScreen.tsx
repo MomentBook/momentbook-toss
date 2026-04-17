@@ -4,9 +4,10 @@ import { formatCount, formatMomentWindow, type JourneyDraft } from '../lib/momen
 type TimelineScreenProps = {
   draft: JourneyDraft
   onChangePhotos: () => void
+  onEditMoments: () => void
 }
 
-export function TimelineScreen({ draft, onChangePhotos }: TimelineScreenProps) {
+export function TimelineScreen({ draft, onChangePhotos, onEditMoments }: TimelineScreenProps) {
   const photoCount = draft.timeline.reduce((total, moment) => total + moment.photos.length, 0)
 
   return (
@@ -20,7 +21,7 @@ export function TimelineScreen({ draft, onChangePhotos }: TimelineScreenProps) {
             <div className="timeline-hero__overlay" />
 
             <div className="timeline-hero__content">
-              <span className="section-badge section-badge--glass">자동 정리 완료</span>
+              <span className="section-badge section-badge--glass">직접 구성 완료</span>
               <h2>{draft.title}</h2>
               <p>{draft.subtitle}</p>
 
@@ -33,7 +34,7 @@ export function TimelineScreen({ draft, onChangePhotos }: TimelineScreenProps) {
           </div>
         ) : (
           <div className="hero-card__content">
-            <span className="section-badge section-badge--primary">자동 정리 완료</span>
+            <span className="section-badge section-badge--primary">직접 구성 완료</span>
             <h2 className="hero-card__title">{draft.title}</h2>
             <p className="hero-card__description">{draft.subtitle}</p>
           </div>
@@ -43,7 +44,7 @@ export function TimelineScreen({ draft, onChangePhotos }: TimelineScreenProps) {
       <section className="panel-card">
         <div className="section-heading">
           <div>
-            <p className="section-heading__eyebrow">정리된 타임라인</p>
+            <p className="section-heading__eyebrow">구성한 타임라인</p>
             <h3>이 순서대로 공개 페이지에 담겨요</h3>
           </div>
         </div>
@@ -81,14 +82,20 @@ export function TimelineScreen({ draft, onChangePhotos }: TimelineScreenProps) {
       <section className="panel-card panel-card--muted">
         <div className="section-heading section-heading--compact">
           <div>
-            <p className="section-heading__eyebrow">다시 정리하고 싶다면</p>
-            <h3>사진을 다시 골라 새로운 여정을 만들 수 있어요</h3>
+            <p className="section-heading__eyebrow">흐름을 바꾸고 싶다면</p>
+            <h3>모먼트를 다시 묶거나 사진을 새로 골라 여정을 바꿀 수 있어요</h3>
           </div>
         </div>
 
-        <Button display="full" size="large" variant="weak" onClick={onChangePhotos}>
-          사진 다시 고르기
-        </Button>
+        <div className="timeline-actions">
+          <Button display="full" size="large" variant="weak" onClick={onEditMoments}>
+            모먼트 다시 묶기
+          </Button>
+
+          <button className="timeline-text-action" type="button" onClick={onChangePhotos}>
+            사진 다시 고르기
+          </button>
+        </div>
       </section>
     </>
   )

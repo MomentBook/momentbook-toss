@@ -27,11 +27,13 @@ import {
   type Screen,
 } from './lib/navigation'
 import {
-  buildDummyJourneyDraft,
-  organizingSteps,
+  buildJourneyDraft,
+  createEmptyJourneyMoments,
+  getUnassignedPhotos,
   readBrowserPhotoFiles,
   normalizeTossAlbumPhotos,
   type JourneyDraft,
+  type JourneyMoment,
   type PhotoAsset,
 } from './lib/momentbook'
 import { DiscoverScreen } from './screens/DiscoverScreen'
@@ -45,6 +47,7 @@ type PublishStatus = 'idle' | 'publishing' | 'complete'
 
 type FlowState = {
   photos: PhotoAsset[]
+  moments: JourneyMoment[]
   draft: JourneyDraft | null
   publishStatus: PublishStatus
 }
@@ -52,6 +55,7 @@ type FlowState = {
 type FlowAction =
   | { type: 'photosSelected'; photos: PhotoAsset[] }
   | { type: 'draftCleared' }
+  | { type: 'momentsUpdated'; moments: JourneyMoment[] }
   | { type: 'draftGenerated'; draft: JourneyDraft }
   | { type: 'publishStarted' }
   | { type: 'publishCompleted' }
@@ -98,12 +102,12 @@ const screenMeta: Record<
     description: '사진을 선택해요.',
   },
   organizing: {
-    label: '자동 정리',
-    description: '시간과 분위기를 기준으로 사진을 모먼트 단위로 묶는 중이에요.',
+    label: '모먼트 구성',
+    description: '사진을 직접 고르며 여정의 흐름을 만들어 보세요.',
   },
   timeline: {
     label: '타임라인 확인',
-    description: '정리된 여정을 미리 보고 공개 흐름을 다듬어요.',
+    description: '직접 구성한 여정을 미리 보고 공개 흐름을 다듬어요.',
   },
   publish: {
     label: '발행 준비',
@@ -113,6 +117,7 @@ const screenMeta: Record<
 
 const initialFlowState: FlowState = {
   photos: [],
+  moments: [],
   draft: null,
   publishStatus: 'idle',
 }
@@ -121,6 +126,7 @@ function buildPhotosSelectedState(photos: PhotoAsset[]): FlowState {
   return {
     ...initialFlowState,
     photos,
+    moments: createEmptyJourneyMoments(),
   }
 }
 
@@ -135,6 +141,7 @@ function clearDraftState(state: FlowState): FlowState {
 function buildDraftGeneratedState(state: FlowState, draft: JourneyDraft): FlowState {
   return {
     ...clearDraftState(state),
+    moments: state.moments,
     draft,
   }
 }
@@ -177,6 +184,11 @@ function reducer(state: FlowState, action: FlowAction): FlowState {
       return buildPhotosSelectedState(action.photos)
     case 'draftCleared':
       return clearDraftState(state)
+    case 'momentsUpdated':
+      return {
+        ...clearDraftState(state),
+        moments: action.moments,
+      }
     case 'draftGenerated':
       return buildDraftGeneratedState(state, action.draft)
     case 'publishStarted':
@@ -211,7 +223,6 @@ function App() {
       initialFeaturedJourneyId,
     ),
   )
-  const [organizingStepIndex, setOrganizingStepIndex] = useState(0)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const setScreenHistory = useCallback((
@@ -267,39 +278,6 @@ function App() {
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
   }, [flow])
-
-  useEffect(() => {
-    if (screen !== 'organizing' || flow.photos.length === 0) {
-      return
-    }
-
-    let elapsed = 0
-    const timeouts = organizingSteps.map((step, index) => {
-      const timeoutId = window.setTimeout(() => {
-        setOrganizingStepIndex(index)
-      }, elapsed)
-
-      elapsed += step.durationMs
-      return timeoutId
-    })
-
-    const finishTimeout = window.setTimeout(() => {
-      const draft = buildDummyJourneyDraft(flow.photos)
-      const nextFlow = buildDraftGeneratedState(flow, draft)
-
-      startTransition(() => {
-        dispatch({ type: 'draftGenerated', draft })
-      })
-
-      void triggerSuccessHaptic()
-      navigate('timeline', 'replace', nextFlow)
-    }, elapsed)
-
-    return () => {
-      timeouts.forEach((timeoutId) => window.clearTimeout(timeoutId))
-      window.clearTimeout(finishTimeout)
-    }
-  }, [flow, navigate, screen])
 
   useEffect(() => {
     if (flow.publishStatus !== 'publishing') {
@@ -376,9 +354,38 @@ function App() {
 
     const nextFlow = clearDraftState(flow)
 
-    setOrganizingStepIndex(0)
     dispatch({ type: 'draftCleared' })
     navigate('organizing', 'push', nextFlow)
+  }, [flow, navigate])
+
+  const handleMomentsUpdated = useCallback((moments: JourneyMoment[]) => {
+    startTransition(() => {
+      dispatch({ type: 'momentsUpdated', moments })
+    })
+  }, [])
+
+  const handlePreviewTimeline = useCallback(() => {
+    const hasGroupedMoment = flow.moments.some((moment) => moment.photos.length > 0)
+
+    if (flow.photos.length === 0 || !hasGroupedMoment) {
+      return
+    }
+
+    const unassignedPhotos = getUnassignedPhotos(flow.photos, flow.moments)
+
+    if (unassignedPhotos.length > 0) {
+      return
+    }
+
+    const draft = buildJourneyDraft(flow.photos, flow.moments)
+    const nextFlow = buildDraftGeneratedState(flow, draft)
+
+    startTransition(() => {
+      dispatch({ type: 'draftGenerated', draft })
+    })
+
+    void triggerSuccessHaptic()
+    navigate('timeline', 'push', nextFlow)
   }, [flow, navigate])
 
   const handleOpenPublish = useCallback(() => {
@@ -402,6 +409,13 @@ function App() {
     navigate('discover', 'replace', initialFlowState)
   }, [navigate])
 
+  const handleEditMoments = useCallback(() => {
+    const nextFlow = clearDraftState(flow)
+
+    dispatch({ type: 'draftCleared' })
+    navigate('organizing', 'push', nextFlow)
+  }, [flow, navigate])
+
   const handleOpenFeaturedJourney = useCallback(
     (journeyId: string) => {
       setScreenHistory('featuredJourney', 'push', { featuredJourneyId: journeyId })
@@ -416,6 +430,8 @@ function App() {
   const currentDraft = flow.draft
   const currentFeaturedJourney = getFeaturedJourneyById(selectedFeaturedJourneyId)
   const copy = runtimeCopy[runtime]
+  const unassignedPhotoCount = getUnassignedPhotos(flow.photos, flow.moments).length
+  const hasGroupedMoment = flow.moments.some((moment) => moment.photos.length > 0)
   const shouldShowChrome =
     screen !== 'upload' && screen !== 'discover' && screen !== 'featuredJourney'
 
@@ -449,13 +465,21 @@ function App() {
       break
     case 'organizing':
       content = (
-        <OrganizingScreen activeStepIndex={organizingStepIndex} totalPhotos={flow.photos.length} />
+        <OrganizingScreen
+          moments={flow.moments}
+          photos={flow.photos}
+          onChangeMoments={handleMomentsUpdated}
+        />
       )
       break
     case 'timeline':
       content =
         currentDraft == null ? null : (
-          <TimelineScreen draft={currentDraft} onChangePhotos={() => void handlePickPhotos()} />
+          <TimelineScreen
+            draft={currentDraft}
+            onChangePhotos={() => void handlePickPhotos()}
+            onEditMoments={handleEditMoments}
+          />
         )
       break
     case 'publish':
@@ -505,7 +529,17 @@ function App() {
 
       {screen === 'upload' ? (
         <FixedBottomCTA hideOnScroll disabled={flow.photos.length === 0} onClick={handleStartOrganizing}>
-          정리하기
+          모먼트 구성하기
+        </FixedBottomCTA>
+      ) : null}
+
+      {screen === 'organizing' ? (
+        <FixedBottomCTA
+          hideOnScroll
+          disabled={!hasGroupedMoment || unassignedPhotoCount > 0}
+          onClick={handlePreviewTimeline}
+        >
+          타임라인 미리보기
         </FixedBottomCTA>
       ) : null}
 

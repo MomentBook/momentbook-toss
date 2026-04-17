@@ -53,6 +53,11 @@ export default defineConfig({
       build: 'tsc -b && vite build',
     },
   },
-  permissions: [],
+  permissions: [
+    {
+      name: 'photos',
+      access: 'read',
+    },
+  ],
   outdir: 'dist',
 });

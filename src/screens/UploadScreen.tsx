@@ -36,6 +36,10 @@ export function UploadScreen({
               {sourceLabel != null ? <span className="feature-chip">{sourceLabel}</span> : null}
             </div>
 
+            <p className="helper-copy">
+              사진을 고른 뒤에는 자동 분류 대신, 원하는 장면끼리 직접 순간을 만들어 보게 돼요.
+            </p>
+
             <div className="upload-grid">
               {previewPhotos.map((photo, index) => (
                 <figure className="upload-tile" key={photo.id}>
