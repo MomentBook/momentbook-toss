@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "granite dev",
+    "dev:web": "vite",
     "dev:host": "vite --host 0.0.0.0",
     "build": "ait build",
     "build:web": "tsc -b && vite build",
