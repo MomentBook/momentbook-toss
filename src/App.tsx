@@ -76,6 +76,35 @@ const runtimeCopy: Record<
   },
 }
 
+const screenMeta: Record<
+  Screen,
+  {
+    label: string
+    description: string
+  }
+> = {
+  discover: {
+    label: '여정 둘러보기',
+    description: '다른 사람의 기록을 먼저 보고 내 여정의 시작점을 찾을 수 있어요.',
+  },
+  upload: {
+    label: '사진 업로드',
+    description: '사진을 담고 같은 화면에서 바로 정리를 시작할 수 있어요.',
+  },
+  organizing: {
+    label: '자동 정리',
+    description: '시간과 분위기를 기준으로 사진을 모먼트 단위로 묶는 중이에요.',
+  },
+  timeline: {
+    label: '타임라인 확인',
+    description: '정리된 여정을 미리 보고 공개 흐름을 다듬어요.',
+  },
+  publish: {
+    label: '발행 준비',
+    description: '대표 이미지와 공개용 페이지 구성을 확인해요.',
+  },
+}
+
 const initialFlowState: FlowState = {
   photos: [],
   draft: null,
@@ -401,6 +430,20 @@ function App() {
       <div className="app-shell__glow app-shell__glow--bottom" />
 
       <div className="screen-shell">
+        {screen !== 'upload' ? (
+          <header className="app-chrome">
+            <div>
+              <p className="app-chrome__eyebrow">Momentbook</p>
+              <h1 className="app-chrome__title">{screenMeta[screen].label}</h1>
+              <p className="app-chrome__description">{screenMeta[screen].description}</p>
+            </div>
+
+            <div className="app-chrome__meta">
+              <span className="app-pill app-pill--brand">{copy.badge}</span>
+            </div>
+          </header>
+        ) : null}
+
         {flow.errorMessage != null && screen !== 'upload' ? (
           <section className="feedback-card feedback-card--error">
             <div>
