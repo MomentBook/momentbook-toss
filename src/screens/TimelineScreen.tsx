@@ -60,7 +60,7 @@ export function TimelineScreen({ draft, onChangePhotos }: TimelineScreenProps) {
           }
           description={
             <ListHeader.DescriptionParagraph>
-              사진 묶음마다 제목과 한 줄 설명을 붙여서 처음 보는 사람도 흐름을 빠르게 이해할 수 있게 했어요.
+              장면별 제목과 짧은 설명을 붙여서 처음 보는 사람도 흐름을 빠르게 이해할 수 있게 했어요.
             </ListHeader.DescriptionParagraph>
           }
           right={
@@ -105,9 +105,9 @@ export function TimelineScreen({ draft, onChangePhotos }: TimelineScreenProps) {
 
       <section className="surface-card">
         <div className="timeline-next-step">
-          <h3>이제 공개 전환으로 이어져요</h3>
+          <h3>결과를 본 흐름 그대로 공개로 이어져요</h3>
           <p>
-            타임라인을 본 직후 곧바로 공개하기 CTA를 보여 주면, 사용자가 결과를 확인한 감정이 남아 있을 때 다음 행동으로 자연스럽게 넘어갈 수 있어요.
+            방금 확인한 여정의 맥락이 남아 있을 때 다음 행동으로 넘어가게 하면 공개 결정이 더 자연스럽게 이어져요.
           </p>
           <p className="section-note">
             이번 구현은 실제 공개나 외부 이동 없이, 공개 유도 화면과 전환 감각만 더미로 보여줘요.

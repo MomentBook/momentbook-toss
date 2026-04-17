@@ -18,7 +18,7 @@ export function PublishScreen({
     <>
       <section className="surface-card hero-card">
         <Result
-          title="공개 흐름을 준비했어요"
+          title="공개 흐름 미리보기를 마쳤어요"
           description="실제 웹 연동 전 단계라서, 지금은 공개 퍼널과 결과 화면만 더미로 확인할 수 있어요."
         />
       </section>
@@ -65,7 +65,7 @@ export function PublishScreen({
           title={<Top.TitleParagraph>이 여정을 웹에 공개해 볼까요?</Top.TitleParagraph>}
           subtitleBottom={
             <Top.SubtitleParagraph>
-              공개하면 링크로 보기 쉬운 페이지를 준비할 수 있다는 기대를 자연스럽게 전달하는 화면이에요.
+              링크로 공유하기 쉬운 형태가 준비된다는 기대를 부담 없이 전달하는 화면이에요.
             </Top.SubtitleParagraph>
           }
         />
@@ -80,7 +80,7 @@ export function PublishScreen({
           }
           description={
             <ListHeader.DescriptionParagraph>
-              실제 공개 대신, 어떤 페이지가 준비될지 떠올릴 수 있도록 핵심 정보만 먼저 보여줘요.
+              실제 공개 없이도 어떤 페이지가 준비될지 떠올릴 수 있도록 핵심 정보만 먼저 보여줘요.
             </ListHeader.DescriptionParagraph>
           }
         />

@@ -46,6 +46,7 @@ type FlowAction =
   | { type: 'draftGenerated'; draft: JourneyDraft }
   | { type: 'publishStarted' }
   | { type: 'publishCompleted' }
+  | { type: 'errorCleared' }
   | { type: 'failed'; message: string }
   | { type: 'resetAll' }
 
@@ -59,13 +60,13 @@ const runtimeCopy: Record<
   }
 > = {
   browser: {
-    badge: '브라우저 미리보기',
+    badge: '웹 미리보기',
     helper: '기기 파일을 바로 올려서 사진 정리 흐름과 화면 구성을 빠르게 확인할 수 있어요.',
     pickerLabel: '사진 가져오기',
     emptyDescription: '먼저 사진을 골라야 자동 정리 흐름을 이어서 볼 수 있어요.',
   },
   sandbox: {
-    badge: '샌드박스',
+    badge: '샌드박스 테스트',
     helper: '토스 사진첩 권한과 선택 흐름을 샌드박스에서 실제와 가깝게 확인할 수 있어요.',
     pickerLabel: '토스 사진첩 열기',
     emptyDescription: '샌드박스에서 사진을 선택하면 바로 더미 여정 타임라인을 만들 수 있어요.',
@@ -137,6 +138,11 @@ function reducer(state: FlowState, action: FlowAction): FlowState {
       return {
         ...state,
         publishStatus: 'complete',
+      }
+    case 'errorCleared':
+      return {
+        ...state,
+        errorMessage: null,
       }
     case 'failed':
       return {
@@ -270,6 +276,8 @@ function App() {
   )
 
   const handlePickPhotos = useCallback(async () => {
+    dispatch({ type: 'errorCleared' })
+
     if (runtime === 'browser') {
       fileInputRef.current?.click()
       return
@@ -298,6 +306,8 @@ function App() {
     if (files.length === 0) {
       return
     }
+
+    dispatch({ type: 'errorCleared' })
 
     try {
       const photos = await readBrowserPhotoFiles(files)
@@ -405,7 +415,11 @@ function App() {
       <div className="screen-shell">
         {flow.errorMessage != null ? (
           <section className="surface-card">
-            <Result title="다시 시도해 주세요" description={flow.errorMessage} />
+            <Result
+              title="다시 시도해 주세요"
+              description={flow.errorMessage}
+              button={<Result.Button onClick={() => void handlePickPhotos()}>다시 시도</Result.Button>}
+            />
           </section>
         ) : null}
 
@@ -414,31 +428,36 @@ function App() {
 
       {screen === 'upload' ? (
         flow.photos.length > 0 ? (
-          <FixedBottomCTA onClick={() => navigate('review', 'push')}>
+          <FixedBottomCTA hideOnScroll onClick={() => navigate('review', 'push')}>
             선택한 사진 이어서 보기
           </FixedBottomCTA>
         ) : (
-          <FixedBottomCTA onClick={() => void handlePickPhotos()}>{copy.pickerLabel}</FixedBottomCTA>
+          <FixedBottomCTA hideOnScroll onClick={() => void handlePickPhotos()}>
+            {copy.pickerLabel}
+          </FixedBottomCTA>
         )
       ) : null}
 
       {screen === 'review' ? (
-        <FixedBottomCTA disabled={flow.photos.length === 0} onClick={handleStartOrganizing}>
+        <FixedBottomCTA hideOnScroll disabled={flow.photos.length === 0} onClick={handleStartOrganizing}>
           자동으로 정리하기
         </FixedBottomCTA>
       ) : null}
 
       {screen === 'timeline' ? (
-        <FixedBottomCTA disabled={currentDraft == null} onClick={handleOpenPublish}>
+        <FixedBottomCTA hideOnScroll disabled={currentDraft == null} onClick={handleOpenPublish}>
           웹에 공개하기
         </FixedBottomCTA>
       ) : null}
 
       {screen === 'publish' ? (
         flow.publishStatus === 'complete' ? (
-          <FixedBottomCTA onClick={handleRestart}>새 여정 만들기</FixedBottomCTA>
+          <FixedBottomCTA hideOnScroll onClick={handleRestart}>
+            새 여정 만들기
+          </FixedBottomCTA>
         ) : (
           <FixedBottomCTA
+            hideOnScroll
             disabled={currentDraft == null || flow.publishStatus === 'publishing'}
             loading={flow.publishStatus === 'publishing'}
             onClick={handlePublish}

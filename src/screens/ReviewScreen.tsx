@@ -22,10 +22,10 @@ export function ReviewScreen({ photos, runtimeLabel, onChangePhotos }: ReviewScr
               <span className="top-badge">{runtimeLabel}</span>
             </div>
           }
-          title={<Top.TitleParagraph>선택한 사진이 정리 준비를 마쳤어요</Top.TitleParagraph>}
+          title={<Top.TitleParagraph>이 사진들로 여정을 만들 준비가 됐어요</Top.TitleParagraph>}
           subtitleBottom={
             <Top.SubtitleParagraph>
-              지금 단계에서는 고른 사진을 확인하고 바로 자동 정리로 이어져요.
+              사진이 맞는지만 확인하면 바로 자동 정리로 이어져요.
             </Top.SubtitleParagraph>
           }
           right={
@@ -95,7 +95,7 @@ export function ReviewScreen({ photos, runtimeLabel, onChangePhotos }: ReviewScr
           }
           description={
             <ListHeader.DescriptionParagraph>
-              자동 정리를 누르면 잠깐의 정리 과정을 보여준 뒤 여정 타임라인과 공개 CTA를 이어서 보여줘요.
+              자동 정리를 누르면 잠깐의 진행 상태를 보여준 뒤 결과와 다음 행동을 바로 이어서 보여줘요.
             </ListHeader.DescriptionParagraph>
           }
         />
@@ -111,7 +111,7 @@ export function ReviewScreen({ photos, runtimeLabel, onChangePhotos }: ReviewScr
               <ListRow.Texts
                 type="2RowTypeA"
                 top="정리 중 경험"
-                bottom="실제 처리처럼 보이되, 이번 구현에서는 더미 단계만 짧게 보여줘요."
+                bottom="실제 처리처럼 느껴지되, 이번 구현에서는 짧은 더미 단계만 보여줘요."
               />
             }
           />

@@ -1,32 +1,32 @@
 .app-shell {
   min-height: 100vh;
-  padding: 24px 0 calc(132px + var(--toss-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
+  padding: 20px 0 calc(128px + var(--toss-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
   background:
-    radial-gradient(circle at top, rgba(49, 130, 246, 0.12), transparent 28%),
-    linear-gradient(180deg, #f7fbff 0%, var(--grey50) 28%, var(--grey50) 100%);
+    radial-gradient(circle at top, rgba(49, 130, 246, 0.08), transparent 24%),
+    linear-gradient(180deg, #f8fbff 0%, #f4f7fb 18%, var(--grey50) 100%);
 }
 
 .screen-shell {
-  width: min(100%, 760px);
+  width: min(100%, 680px);
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 16px;
   display: grid;
-  gap: 18px;
+  gap: 14px;
 }
 
 .surface-card {
   overflow: hidden;
-  border-radius: 32px;
+  border-radius: 24px;
   background: var(--white);
   border: 1px solid rgba(0, 27, 55, 0.06);
   box-shadow:
-    0 16px 40px rgba(2, 32, 71, 0.04),
-    0 4px 12px rgba(2, 32, 71, 0.03);
+    0 10px 28px rgba(2, 32, 71, 0.04),
+    0 2px 8px rgba(2, 32, 71, 0.03);
 }
 
 .hero-card {
   background:
-    linear-gradient(180deg, rgba(49, 130, 246, 0.06), rgba(49, 130, 246, 0)),
+    linear-gradient(180deg, rgba(49, 130, 246, 0.05), rgba(49, 130, 246, 0)),
     var(--white);
 }
 
@@ -42,10 +42,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 28px;
-  padding: 0 12px;
+  min-height: 26px;
+  padding: 0 11px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -63,25 +63,25 @@
 .hero-metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
 .hero-metric {
-  padding: 16px 18px;
-  border-radius: 22px;
-  background: rgba(2, 32, 71, 0.03);
+  padding: 15px 16px;
+  border-radius: 18px;
+  background: rgba(2, 32, 71, 0.04);
   display: grid;
-  gap: 6px;
+  gap: 4px;
 }
 
 .hero-metric span {
   color: var(--grey600);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .hero-metric strong {
   color: var(--grey900);
-  font-size: 17px;
+  font-size: 16px;
   letter-spacing: -0.02em;
 }
 
@@ -94,27 +94,26 @@
 }
 
 .journey-value-strip {
-  padding: 0 24px 24px;
+  padding: 0 20px 20px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .journey-value {
-  padding: 16px;
-  border-radius: 20px;
-  background: var(--grey50);
+  padding: 15px 16px;
+  border-radius: 18px;
+  background: rgba(2, 32, 71, 0.03);
   display: grid;
   gap: 4px;
 }
 
 .journey-value strong {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--grey900);
 }
 
 .journey-value span {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--grey600);
   line-height: 1.5;
 }
@@ -123,7 +122,7 @@
 .publish-preview,
 .publish-success-card,
 .timeline-next-step {
-  padding: 20px 24px 24px;
+  padding: 18px 20px 20px;
 }
 
 .summary-panel {
@@ -133,14 +132,14 @@
 
 .summary-panel strong {
   color: var(--grey900);
-  font-size: 22px;
+  font-size: 21px;
   letter-spacing: -0.03em;
 }
 
 .inline-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .photo-grid,
@@ -150,7 +149,7 @@
 }
 
 .photo-grid {
-  padding: 0 24px 24px;
+  padding: 0 20px 20px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -170,12 +169,12 @@
 .photo-card,
 .publish-cover {
   aspect-ratio: 1 / 1;
-  border-radius: 20px;
+  border-radius: 18px;
 }
 
 .timeline-preview {
   aspect-ratio: 1 / 1;
-  border-radius: 16px;
+  border-radius: 14px;
 }
 
 .photo-card img,
@@ -197,17 +196,18 @@
 }
 
 .timeline-stack {
-  padding: 0 24px 24px;
+  padding: 0 20px 20px;
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .timeline-card {
-  padding: 20px;
-  border-radius: 24px;
-  background: var(--grey50);
+  padding: 18px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff, #fbfcff);
+  border: 1px solid rgba(0, 27, 55, 0.06);
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .timeline-card-head {
@@ -249,10 +249,8 @@
 
 .timeline-next-step {
   display: grid;
-  gap: 14px;
-  background:
-    linear-gradient(180deg, rgba(49, 130, 246, 0.08), rgba(49, 130, 246, 0)),
-    var(--white);
+  gap: 12px;
+  background: rgba(49, 130, 246, 0.05);
 }
 
 .timeline-next-step h3,
@@ -274,8 +272,8 @@
 }
 
 .loader-panel {
-  min-height: 240px;
-  padding: 40px 24px;
+  min-height: 220px;
+  padding: 36px 20px;
   display: grid;
   place-items: center;
   gap: 14px;
@@ -283,15 +281,16 @@
 }
 
 .progress-list {
-  padding: 0 24px 24px;
+  padding: 0 20px 20px;
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .progress-item {
-  padding: 16px 18px;
-  border-radius: 20px;
-  background: var(--grey50);
+  padding: 16px;
+  border-radius: 18px;
+  background: #fbfcff;
+  border: 1px solid rgba(0, 27, 55, 0.05);
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 14px;
@@ -300,10 +299,12 @@
 
 .progress-item.is-active {
   background: rgba(49, 130, 246, 0.08);
+  border-color: rgba(49, 130, 246, 0.18);
 }
 
 .progress-item.is-complete {
   background: rgba(2, 178, 108, 0.08);
+  border-color: rgba(2, 178, 108, 0.12);
 }
 
 .status-dot {
@@ -347,6 +348,9 @@
 .publish-preview-card {
   display: grid;
   gap: 16px;
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(2, 32, 71, 0.03);
 }
 
 .publish-meta {
@@ -378,8 +382,7 @@
 }
 
 @media (max-width: 720px) {
-  .hero-metrics,
-  .journey-value-strip {
+  .hero-metrics {
     grid-template-columns: 1fr;
   }
 
@@ -395,11 +398,11 @@
 
   .screen-shell {
     padding: 0 12px;
-    gap: 16px;
+    gap: 14px;
   }
 
   .surface-card {
-    border-radius: 28px;
+    border-radius: 22px;
   }
 
   .photo-grid {

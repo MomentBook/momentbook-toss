@@ -28,7 +28,7 @@ export function UploadScreen({ copy, photos, onContinue, onPickPhotos }: UploadS
               <span className="top-badge">{copy.badge}</span>
             </div>
           }
-          title={<Top.TitleParagraph>사진을 올리면 여정 타임라인으로 정리해요</Top.TitleParagraph>}
+          title={<Top.TitleParagraph>사진을 고르면 바로 여정으로 정리해요</Top.TitleParagraph>}
           subtitleBottom={<Top.SubtitleParagraph>{copy.helper}</Top.SubtitleParagraph>}
           lower={
             <div className="hero-metrics">
@@ -50,16 +50,16 @@ export function UploadScreen({ copy, photos, onContinue, onPickPhotos }: UploadS
 
         <div className="journey-value-strip">
           <div className="journey-value">
-            <strong>흩어진 사진을 한 번에</strong>
-            <span>고른 사진을 순서대로 정리해 자연스러운 흐름으로 보여줘요.</span>
+            <strong>선택만 하면 돼요</strong>
+            <span>사진을 고르는 순간 다음 화면으로 자연스럽게 이어져요.</span>
           </div>
           <div className="journey-value">
-            <strong>공개 전환까지 이어서</strong>
-            <span>타임라인을 본 직후 공개 화면으로 이어지는 퍼널을 바로 확인할 수 있어요.</span>
+            <strong>결과를 바로 확인해요</strong>
+            <span>정리 중 상태를 짧게 보여준 뒤 타임라인을 바로 보여줘요.</span>
           </div>
           <div className="journey-value">
-            <strong>지금은 더미 플로우</strong>
-            <span>실제 공개나 외부 링크 연결 없이 UX 구조와 카피를 먼저 검증해요.</span>
+            <strong>공개 직전 UX까지 이어져요</strong>
+            <span>실제 배포 전에도 공개 전환 흐름과 카피를 함께 검증할 수 있어요.</span>
           </div>
         </div>
       </section>
@@ -73,7 +73,7 @@ export function UploadScreen({ copy, photos, onContinue, onPickPhotos }: UploadS
           }
           description={
             <ListHeader.DescriptionParagraph>
-              다음 행동이 분명하게 보이도록 토스 앱처럼 한 화면에 한 결정만 남겨 뒀어요.
+              다음 행동이 헷갈리지 않도록 한 화면에 한 결정만 남겨 뒀어요.
             </ListHeader.DescriptionParagraph>
           }
         />
@@ -154,10 +154,10 @@ export function UploadScreen({ copy, photos, onContinue, onPickPhotos }: UploadS
               <p className="support-copy">{formatPhotoRange(photos)}</p>
               <div className="inline-actions">
                 <Button display="full" size="large" variant="weak" onClick={onContinue}>
-                  선택한 사진 이어서 보기
+                  선택 내용 확인하기
                 </Button>
                 <Button display="full" size="large" variant="weak" onClick={onPickPhotos}>
-                  사진 다시 고르기
+                  다시 고르기
                 </Button>
               </div>
             </div>
