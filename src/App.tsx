@@ -31,6 +31,7 @@ import {
   type JourneyDraft,
   type PhotoAsset,
 } from './lib/momentbook'
+import { DiscoverScreen } from './screens/DiscoverScreen'
 import { OrganizingScreen } from './screens/OrganizingScreen'
 import { PublishScreen } from './screens/PublishScreen'
 import { ReviewScreen } from './screens/ReviewScreen'
@@ -92,6 +93,10 @@ const screenMeta: Record<
     description: string
   }
 > = {
+  discover: {
+    label: '여정 둘러보기',
+    description: '다른 사람의 기록을 먼저 보고 내 여정의 시작점을 찾을 수 있어요.',
+  },
   upload: {
     label: '사진 선택',
     description: '여행 사진을 모아 모먼트북의 첫 장을 시작해요.',
@@ -145,6 +150,10 @@ function buildDraftGeneratedState(state: FlowState, draft: JourneyDraft): FlowSt
 }
 
 function resolveAccessibleScreen(requested: Screen, state: FlowState): Screen {
+  if (requested === 'discover') {
+    return 'discover'
+  }
+
   if (requested === 'upload') {
     return 'upload'
   }
@@ -161,7 +170,7 @@ function resolveAccessibleScreen(requested: Screen, state: FlowState): Screen {
     return state.photos.length > 0 ? 'review' : 'upload'
   }
 
-  return 'upload'
+  return 'discover'
 }
 
 function reducer(state: FlowState, action: FlowAction): FlowState {
@@ -204,7 +213,7 @@ function App() {
   const [flow, dispatch] = useReducer(reducer, initialFlowState)
   const [screen, setScreen] = useState<Screen>(() =>
     resolveAccessibleScreen(
-      getRequestedScreen(window.location.hash, window.history.state) ?? 'upload',
+      getRequestedScreen(window.location.hash, window.history.state) ?? 'discover',
       initialFlowState,
     ),
   )
@@ -238,7 +247,7 @@ function App() {
 
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
-      const requestedScreen = getRequestedScreen(window.location.hash, event.state) ?? 'upload'
+      const requestedScreen = getRequestedScreen(window.location.hash, event.state) ?? 'discover'
       const nextScreen = resolveAccessibleScreen(requestedScreen, flow)
       setScreen(nextScreen)
     }
@@ -382,7 +391,7 @@ function App() {
 
   const handleRestart = useCallback(() => {
     dispatch({ type: 'resetAll' })
-    navigate('upload', 'replace', initialFlowState)
+    navigate('discover', 'replace', initialFlowState)
   }, [navigate])
 
   const currentDraft = flow.draft
@@ -392,6 +401,9 @@ function App() {
   let content = null
 
   switch (screen) {
+    case 'discover':
+      content = <DiscoverScreen hasSelectedPhotos={flow.photos.length > 0} />
+      break
     case 'upload':
       content = (
         <UploadScreen
@@ -488,6 +500,15 @@ function App() {
 
         {content}
       </div>
+
+      {screen === 'discover' ? (
+        <FixedBottomCTA
+          hideOnScroll
+          onClick={() => navigate(flow.photos.length > 0 ? 'review' : 'upload', 'push')}
+        >
+          {flow.photos.length > 0 ? '선택한 사진 이어서 보기' : '내 여정 추가하기'}
+        </FixedBottomCTA>
+      ) : null}
 
       {screen === 'upload' ? (
         flow.photos.length > 0 ? (

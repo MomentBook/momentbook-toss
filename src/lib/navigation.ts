@@ -1,4 +1,4 @@
-export const screens = ['upload', 'review', 'organizing', 'timeline', 'publish'] as const
+export const screens = ['discover', 'upload', 'review', 'organizing', 'timeline', 'publish'] as const
 
 export type Screen = (typeof screens)[number]
 
