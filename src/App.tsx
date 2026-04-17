@@ -7,7 +7,7 @@ import {
   useState,
   type ChangeEvent,
 } from 'react'
-import { Button, FixedBottomCTA } from '@toss/tds-mobile'
+import { FixedBottomCTA, useToast } from '@toss/tds-mobile'
 import './App.css'
 import {
   getFeaturedJourneyById,
@@ -47,7 +47,6 @@ type FlowState = {
   photos: PhotoAsset[]
   draft: JourneyDraft | null
   publishStatus: PublishStatus
-  errorMessage: string | null
 }
 
 type FlowAction =
@@ -56,28 +55,26 @@ type FlowAction =
   | { type: 'draftGenerated'; draft: JourneyDraft }
   | { type: 'publishStarted' }
   | { type: 'publishCompleted' }
-  | { type: 'errorCleared' }
-  | { type: 'failed'; message: string }
   | { type: 'resetAll' }
 
 const runtimeCopy: Record<
   RuntimeEnvironment,
   {
     badge: string
-    emptyDescription: string
+    pickLabel: string
   }
 > = {
   browser: {
     badge: '웹 미리보기',
-    emptyDescription: '기기에서 여행 사진을 선택해 주세요.',
+    pickLabel: '사진 선택',
   },
   sandbox: {
     badge: '샌드박스',
-    emptyDescription: '연결된 사진첩에서 정리할 사진을 골라 주세요.',
+    pickLabel: '사진첩에서 고르기',
   },
   toss: {
     badge: 'Toss 연결',
-    emptyDescription: '여행 사진을 선택하면 바로 정리 초안을 시작해요.',
+    pickLabel: '사진첩에서 고르기',
   },
 }
 
@@ -98,7 +95,7 @@ const screenMeta: Record<
   },
   upload: {
     label: '사진 업로드',
-    description: '사진을 담고 같은 화면에서 바로 정리를 시작할 수 있어요.',
+    description: '사진을 선택해요.',
   },
   organizing: {
     label: '자동 정리',
@@ -118,7 +115,6 @@ const initialFlowState: FlowState = {
   photos: [],
   draft: null,
   publishStatus: 'idle',
-  errorMessage: null,
 }
 
 function buildPhotosSelectedState(photos: PhotoAsset[]): FlowState {
@@ -133,7 +129,6 @@ function clearDraftState(state: FlowState): FlowState {
     ...state,
     draft: null,
     publishStatus: 'idle',
-    errorMessage: null,
   }
 }
 
@@ -194,16 +189,6 @@ function reducer(state: FlowState, action: FlowAction): FlowState {
         ...state,
         publishStatus: 'complete',
       }
-    case 'errorCleared':
-      return {
-        ...state,
-        errorMessage: null,
-      }
-    case 'failed':
-      return {
-        ...state,
-        errorMessage: action.message,
-      }
     case 'resetAll':
       return initialFlowState
     default:
@@ -213,6 +198,7 @@ function reducer(state: FlowState, action: FlowAction): FlowState {
 
 function App() {
   const initialFeaturedJourneyId = getRequestedFeaturedJourneyId(window.history.state)
+  const toast = useToast()
   const [runtime] = useState<RuntimeEnvironment>(() => getRuntimeEnvironment())
   const [flow, dispatch] = useReducer(reducer, initialFlowState)
   const [selectedFeaturedJourneyId, setSelectedFeaturedJourneyId] = useState<string | null>(
@@ -346,8 +332,6 @@ function App() {
 
   const selectPhotos = useCallback(
     async (loader: () => Promise<PhotoAsset[]>) => {
-      dispatch({ type: 'errorCleared' })
-
       try {
         const photos = await loader()
 
@@ -357,18 +341,16 @@ function App() {
 
         completePhotoSelection(photos)
       } catch (error) {
-        dispatch({
-          type: 'failed',
-          message: getPhotoSelectionMessage(error),
+        toast.openToast(getPhotoSelectionMessage(error), {
+          higherThanCTA: true,
         })
       }
     },
-    [completePhotoSelection],
+    [completePhotoSelection, toast],
   )
 
   const handlePickPhotos = useCallback(async () => {
     if (runtime === 'browser') {
-      dispatch({ type: 'errorCleared' })
       fileInputRef.current?.click()
       return
     }
@@ -443,7 +425,6 @@ function App() {
     case 'discover':
       content = (
         <DiscoverScreen
-          hasSelectedPhotos={flow.photos.length > 0}
           onOpenJourney={handleOpenFeaturedJourney}
         />
       )
@@ -460,8 +441,7 @@ function App() {
     case 'upload':
       content = (
         <UploadScreen
-          emptyDescription={copy.emptyDescription}
-          errorMessage={flow.errorMessage}
+          pickLabel={copy.pickLabel}
           photos={flow.photos}
           onPickPhotos={() => void handlePickPhotos()}
         />
@@ -500,27 +480,12 @@ function App() {
             <div>
               <p className="app-chrome__eyebrow">Momentbook</p>
               <h1 className="app-chrome__title">{screenMeta[screen].label}</h1>
-              <p className="app-chrome__description">{screenMeta[screen].description}</p>
             </div>
 
             <div className="app-chrome__meta">
               <span className="app-pill app-pill--brand">{copy.badge}</span>
             </div>
           </header>
-        ) : null}
-
-        {flow.errorMessage != null && screen !== 'upload' ? (
-          <section className="feedback-card feedback-card--error">
-            <div>
-              <p className="feedback-card__eyebrow">사진을 불러오지 못했어요</p>
-              <h2>한 번 더 시도해 주세요.</h2>
-              <p>{flow.errorMessage}</p>
-            </div>
-
-            <Button display="full" size="large" variant="weak" onClick={() => void handlePickPhotos()}>
-              다시 시도
-            </Button>
-          </section>
         ) : null}
 
         {content}
