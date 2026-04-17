@@ -16,7 +16,13 @@ import {
   triggerSuccessHaptic,
   type RuntimeEnvironment,
 } from './lib/appsInToss'
-import { buildHistoryState, getRequestedScreen, toScreenHash, type Screen } from './lib/navigation'
+import {
+  buildHistoryState,
+  getRequestedScreen,
+  screens,
+  toScreenHash,
+  type Screen,
+} from './lib/navigation'
 import {
   buildDummyJourneyDraft,
   organizingSteps,
@@ -79,8 +85,6 @@ const runtimeCopy: Record<
   },
 }
 
-const orderedScreens: Screen[] = ['upload', 'review', 'organizing', 'timeline', 'publish']
-
 const screenMeta: Record<
   Screen,
   {
@@ -117,6 +121,29 @@ const initialFlowState: FlowState = {
   errorMessage: null,
 }
 
+function buildPhotosSelectedState(photos: PhotoAsset[]): FlowState {
+  return {
+    ...initialFlowState,
+    photos,
+  }
+}
+
+function clearDraftState(state: FlowState): FlowState {
+  return {
+    ...state,
+    draft: null,
+    publishStatus: 'idle',
+    errorMessage: null,
+  }
+}
+
+function buildDraftGeneratedState(state: FlowState, draft: JourneyDraft): FlowState {
+  return {
+    ...clearDraftState(state),
+    draft,
+  }
+}
+
 function resolveAccessibleScreen(requested: Screen, state: FlowState): Screen {
   if (requested === 'upload') {
     return 'upload'
@@ -140,26 +167,11 @@ function resolveAccessibleScreen(requested: Screen, state: FlowState): Screen {
 function reducer(state: FlowState, action: FlowAction): FlowState {
   switch (action.type) {
     case 'photosSelected':
-      return {
-        photos: action.photos,
-        draft: null,
-        publishStatus: 'idle',
-        errorMessage: null,
-      }
+      return buildPhotosSelectedState(action.photos)
     case 'draftCleared':
-      return {
-        ...state,
-        draft: null,
-        publishStatus: 'idle',
-        errorMessage: null,
-      }
+      return clearDraftState(state)
     case 'draftGenerated':
-      return {
-        ...state,
-        draft: action.draft,
-        publishStatus: 'idle',
-        errorMessage: null,
-      }
+      return buildDraftGeneratedState(state, action.draft)
     case 'publishStarted':
       return {
         ...state,
@@ -252,16 +264,14 @@ function App() {
 
     const finishTimeout = window.setTimeout(() => {
       const draft = buildDummyJourneyDraft(flow.photos)
+      const nextFlow = buildDraftGeneratedState(flow, draft)
 
       startTransition(() => {
         dispatch({ type: 'draftGenerated', draft })
       })
 
       void triggerSuccessHaptic()
-      navigate('timeline', 'replace', {
-        ...flow,
-        draft,
-      })
+      navigate('timeline', 'replace', nextFlow)
     }, elapsed)
 
     return () => {
@@ -288,47 +298,48 @@ function App() {
 
   const completePhotoSelection = useCallback(
     (photos: PhotoAsset[]) => {
+      const nextFlow = buildPhotosSelectedState(photos)
+
       startTransition(() => {
         dispatch({ type: 'photosSelected', photos })
       })
 
-      navigate(
-        'review',
-        screen === 'review' ? 'replace' : 'push',
-        {
-          photos,
-          draft: null,
-          publishStatus: 'idle',
-          errorMessage: null,
-        },
-      )
+      navigate('review', screen === 'review' ? 'replace' : 'push', nextFlow)
     },
     [navigate, screen],
   )
 
-  const handlePickPhotos = useCallback(async () => {
-    dispatch({ type: 'errorCleared' })
+  const selectPhotos = useCallback(
+    async (loader: () => Promise<PhotoAsset[]>) => {
+      dispatch({ type: 'errorCleared' })
 
+      try {
+        const photos = await loader()
+
+        if (photos.length === 0) {
+          return
+        }
+
+        completePhotoSelection(photos)
+      } catch (error) {
+        dispatch({
+          type: 'failed',
+          message: getPhotoSelectionMessage(error),
+        })
+      }
+    },
+    [completePhotoSelection],
+  )
+
+  const handlePickPhotos = useCallback(async () => {
     if (runtime === 'browser') {
+      dispatch({ type: 'errorCleared' })
       fileInputRef.current?.click()
       return
     }
 
-    try {
-      const albumPhotos = await fetchMomentbookAlbumPhotos()
-
-      if (albumPhotos.length === 0) {
-        return
-      }
-
-      completePhotoSelection(normalizeTossAlbumPhotos(albumPhotos))
-    } catch (error) {
-      dispatch({
-        type: 'failed',
-        message: getPhotoSelectionMessage(error),
-      })
-    }
-  }, [completePhotoSelection, runtime])
+    await selectPhotos(async () => normalizeTossAlbumPhotos(await fetchMomentbookAlbumPhotos()))
+  }, [runtime, selectPhotos])
 
   const handleBrowserSelection = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.currentTarget.files ?? [])
@@ -338,17 +349,7 @@ function App() {
       return
     }
 
-    dispatch({ type: 'errorCleared' })
-
-    try {
-      const photos = await readBrowserPhotoFiles(files)
-      completePhotoSelection(photos)
-    } catch (error) {
-      dispatch({
-        type: 'failed',
-        message: getPhotoSelectionMessage(error),
-      })
-    }
+    await selectPhotos(() => readBrowserPhotoFiles(files))
   }
 
   const handleStartOrganizing = useCallback(() => {
@@ -356,18 +357,11 @@ function App() {
       return
     }
 
+    const nextFlow = clearDraftState(flow)
+
     setOrganizingStepIndex(0)
     dispatch({ type: 'draftCleared' })
-    navigate(
-      'organizing',
-      'push',
-      {
-        ...flow,
-        draft: null,
-        publishStatus: 'idle',
-        errorMessage: null,
-      },
-    )
+    navigate('organizing', 'push', nextFlow)
   }, [flow, navigate])
 
   const handleOpenPublish = useCallback(() => {
@@ -393,7 +387,7 @@ function App() {
 
   const currentDraft = flow.draft
   const copy = runtimeCopy[runtime]
-  const currentStep = orderedScreens.indexOf(screen)
+  const currentStep = screens.indexOf(screen)
 
   let content = null
 
@@ -456,13 +450,13 @@ function App() {
           <div className="app-chrome__meta">
             <span className="app-pill app-pill--brand">{copy.badge}</span>
             <span className="app-pill">
-              {currentStep + 1} / {orderedScreens.length}
+              {currentStep + 1} / {screens.length}
             </span>
           </div>
         </header>
 
         <nav className="journey-progress" aria-label="정리 진행 단계">
-          {orderedScreens.map((progressScreen, index) => {
+          {screens.map((progressScreen, index) => {
             const state =
               index < currentStep ? 'done' : index === currentStep ? 'active' : 'upcoming'
 
