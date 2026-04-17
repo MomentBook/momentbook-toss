@@ -1,7 +1,7 @@
 import { defineConfig } from '@apps-in-toss/web-framework/config';
 
 export default defineConfig({
-  appName: 'momentbook',
+  appName: 'MomentBook',
   brand: {
     displayName: 'MomentBook',
     primaryColor: '#81C784',
