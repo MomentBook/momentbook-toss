@@ -66,8 +66,7 @@ Sandbox 또는 브라우저 미리보기에서 플로우를 검증하는 내부 
 
 | Step | Current behavior | Implementation anchor |
 | --- | --- | --- |
-| Upload | 브라우저 파일 또는 Toss 앨범 사진을 고른다 | `src/App.tsx`, `src/screens/UploadScreen.tsx`, `src/lib/appsInToss.ts` |
-| Review | 선택한 사진 수, 범위, 일부 썸네일을 확인한다 | `src/screens/ReviewScreen.tsx` |
+| Upload | 브라우저 파일 또는 Toss 앨범 사진을 고르고, 같은 화면에서 큰 그리드로 확인한 뒤 정리를 시작한다 | `src/App.tsx`, `src/screens/UploadScreen.tsx`, `src/lib/appsInToss.ts` |
 | Organizing | 3단계 진행 UI를 보여준 뒤 초안을 만든다 | `src/screens/OrganizingScreen.tsx`, `src/lib/momentbook.ts` |
 | Timeline | 최대 4개의 moment 카드로 묶인 프리뷰를 보여준다 | `src/screens/TimelineScreen.tsx` |
 | Publish | 실제 게시가 아니라 게시 결과 프리뷰 상태를 보여준다 | `src/screens/PublishScreen.tsx` |
@@ -106,9 +105,9 @@ Sandbox 또는 브라우저 미리보기에서 플로우를 검증하는 내부 
 
 사진을 고른 직후 사용자는 "정리 가능한 단위"와 예상 결과를 빠르게 이해할 수 있어야 합니다.
 
-### FR-3 Guided review
+### FR-3 Single-screen confirmation
 
-정리 전 단계에서 사진 수, 일부 썸네일, 정리 방식에 대한 설명을 확인할 수 있어야 합니다.
+사용자는 업로드 화면 하나에서 사진 그리드와 선택 상태를 확인하고 바로 정리를 시작할 수 있어야 합니다.
 
 ### FR-4 Automatic draft creation
 

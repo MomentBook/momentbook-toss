@@ -19,7 +19,6 @@ import {
 import {
   buildHistoryState,
   getRequestedScreen,
-  screens,
   toScreenHash,
   type Screen,
 } from './lib/navigation'
@@ -34,7 +33,6 @@ import {
 import { DiscoverScreen } from './screens/DiscoverScreen'
 import { OrganizingScreen } from './screens/OrganizingScreen'
 import { PublishScreen } from './screens/PublishScreen'
-import { ReviewScreen } from './screens/ReviewScreen'
 import { TimelineScreen } from './screens/TimelineScreen'
 import { UploadScreen } from './screens/UploadScreen'
 
@@ -61,61 +59,20 @@ const runtimeCopy: Record<
   RuntimeEnvironment,
   {
     badge: string
-    helper: string
-    pickerLabel: string
     emptyDescription: string
   }
 > = {
   browser: {
     badge: '웹 미리보기',
-    helper: '사진을 선택하면 시간순으로 정리해서 모먼트북 초안을 만들어드려요.',
-    pickerLabel: '사진 가져오기',
     emptyDescription: '기기에서 여행 사진을 선택해 주세요.',
   },
   sandbox: {
     badge: '샌드박스',
-    helper: '토스 사진첩 연동 흐름을 미리 확인할 수 있어요.',
-    pickerLabel: '토스 사진첩 열기',
     emptyDescription: '연결된 사진첩에서 정리할 사진을 골라 주세요.',
   },
   toss: {
     badge: 'Toss 연결',
-    helper: '토스 사진첩에서 선택한 사진을 한 번에 여행 타임라인으로 정리해드려요.',
-    pickerLabel: '토스 사진첩 열기',
     emptyDescription: '여행 사진을 선택하면 바로 정리 초안을 시작해요.',
-  },
-}
-
-const screenMeta: Record<
-  Screen,
-  {
-    label: string
-    description: string
-  }
-> = {
-  discover: {
-    label: '여정 둘러보기',
-    description: '다른 사람의 기록을 먼저 보고 내 여정의 시작점을 찾을 수 있어요.',
-  },
-  upload: {
-    label: '사진 선택',
-    description: '여행 사진을 모아 모먼트북의 첫 장을 시작해요.',
-  },
-  review: {
-    label: '선택 검토',
-    description: '정리 전에 사진 수와 흐름을 한 번 더 확인해요.',
-  },
-  organizing: {
-    label: '자동 정리',
-    description: '시간과 분위기를 기준으로 사진을 모먼트 단위로 묶는 중이에요.',
-  },
-  timeline: {
-    label: '타임라인 확인',
-    description: '정리된 여정을 미리 보고 공개 흐름을 다듬어요.',
-  },
-  publish: {
-    label: '발행 준비',
-    description: '대표 이미지와 공개용 페이지 구성을 확인해요.',
   },
 }
 
@@ -158,7 +115,7 @@ function resolveAccessibleScreen(requested: Screen, state: FlowState): Screen {
     return 'upload'
   }
 
-  if (requested === 'review' || requested === 'organizing') {
+  if (requested === 'organizing') {
     return state.photos.length > 0 ? requested : 'upload'
   }
 
@@ -167,7 +124,7 @@ function resolveAccessibleScreen(requested: Screen, state: FlowState): Screen {
       return requested
     }
 
-    return state.photos.length > 0 ? 'review' : 'upload'
+    return 'upload'
   }
 
   return 'discover'
@@ -313,7 +270,7 @@ function App() {
         dispatch({ type: 'photosSelected', photos })
       })
 
-      navigate('review', screen === 'review' ? 'replace' : 'push', nextFlow)
+      navigate('upload', screen === 'upload' ? 'replace' : 'push', nextFlow)
     },
     [navigate, screen],
   )
@@ -396,7 +353,6 @@ function App() {
 
   const currentDraft = flow.draft
   const copy = runtimeCopy[runtime]
-  const currentStep = screens.indexOf(screen)
 
   let content = null
 
@@ -407,17 +363,10 @@ function App() {
     case 'upload':
       content = (
         <UploadScreen
-          copy={copy}
+          emptyDescription={copy.emptyDescription}
+          errorMessage={flow.errorMessage}
           photos={flow.photos}
           onPickPhotos={() => void handlePickPhotos()}
-        />
-      )
-      break
-    case 'review':
-      content = (
-        <ReviewScreen
-          photos={flow.photos}
-          onChangePhotos={() => void handlePickPhotos()}
         />
       )
       break
@@ -452,39 +401,7 @@ function App() {
       <div className="app-shell__glow app-shell__glow--bottom" />
 
       <div className="screen-shell">
-        <header className="app-chrome">
-          <div>
-            <p className="app-chrome__eyebrow">Momentbook</p>
-            <h1 className="app-chrome__title">{screenMeta[screen].label}</h1>
-            <p className="app-chrome__description">{screenMeta[screen].description}</p>
-          </div>
-
-          <div className="app-chrome__meta">
-            <span className="app-pill app-pill--brand">{copy.badge}</span>
-            <span className="app-pill">
-              {currentStep + 1} / {screens.length}
-            </span>
-          </div>
-        </header>
-
-        <nav className="journey-progress" aria-label="정리 진행 단계">
-          {screens.map((progressScreen, index) => {
-            const state =
-              index < currentStep ? 'done' : index === currentStep ? 'active' : 'upcoming'
-
-            return (
-              <div
-                className={`journey-step journey-step--${state}`}
-                key={progressScreen}
-              >
-                <span className="journey-step__bar" />
-                <span className="journey-step__label">{screenMeta[progressScreen].label}</span>
-              </div>
-            )
-          })}
-        </nav>
-
-        {flow.errorMessage != null ? (
+        {flow.errorMessage != null && screen !== 'upload' ? (
           <section className="feedback-card feedback-card--error">
             <div>
               <p className="feedback-card__eyebrow">사진을 불러오지 못했어요</p>
@@ -502,29 +419,14 @@ function App() {
       </div>
 
       {screen === 'discover' ? (
-        <FixedBottomCTA
-          hideOnScroll
-          onClick={() => navigate(flow.photos.length > 0 ? 'review' : 'upload', 'push')}
-        >
-          {flow.photos.length > 0 ? '선택한 사진 이어서 보기' : '내 여정 추가하기'}
+        <FixedBottomCTA hideOnScroll onClick={() => navigate('upload', 'push')}>
+          {flow.photos.length > 0 ? '선택한 사진 이어서 정리하기' : '내 여정 추가하기'}
         </FixedBottomCTA>
       ) : null}
 
       {screen === 'upload' ? (
-        flow.photos.length > 0 ? (
-          <FixedBottomCTA hideOnScroll onClick={() => navigate('review', 'push')}>
-            선택한 사진 확인하기
-          </FixedBottomCTA>
-        ) : (
-          <FixedBottomCTA hideOnScroll onClick={() => void handlePickPhotos()}>
-            {copy.pickerLabel}
-          </FixedBottomCTA>
-        )
-      ) : null}
-
-      {screen === 'review' ? (
         <FixedBottomCTA hideOnScroll disabled={flow.photos.length === 0} onClick={handleStartOrganizing}>
-          이 사진으로 정리하기
+          정리하기
         </FixedBottomCTA>
       ) : null}
 
