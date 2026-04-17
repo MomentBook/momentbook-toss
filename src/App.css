@@ -1,7 +1,9 @@
 .app-shell {
   min-height: 100vh;
   padding: 24px 0 calc(132px + var(--toss-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
-  background: var(--grey50);
+  background:
+    radial-gradient(circle at top, rgba(49, 130, 246, 0.12), transparent 28%),
+    linear-gradient(180deg, #f7fbff 0%, var(--grey50) 28%, var(--grey50) 100%);
 }
 
 .screen-shell {
@@ -9,7 +11,7 @@
   margin: 0 auto;
   padding: 0 20px;
   display: grid;
-  gap: 20px;
+  gap: 18px;
 }
 
 .surface-card {
@@ -18,8 +20,14 @@
   background: var(--white);
   border: 1px solid rgba(0, 27, 55, 0.06);
   box-shadow:
-    0 12px 32px rgba(2, 32, 71, 0.04),
-    0 2px 8px rgba(2, 32, 71, 0.03);
+    0 16px 40px rgba(2, 32, 71, 0.04),
+    0 4px 12px rgba(2, 32, 71, 0.03);
+}
+
+.hero-card {
+  background:
+    linear-gradient(180deg, rgba(49, 130, 246, 0.06), rgba(49, 130, 246, 0)),
+    var(--white);
 }
 
 .top-badge-row {
@@ -30,7 +38,7 @@
 
 .top-badge,
 .info-pill,
-.status-pill {
+.path-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -48,13 +56,8 @@
 }
 
 .top-badge--brand {
-  background: rgba(0, 100, 255, 0.12);
+  background: rgba(49, 130, 246, 0.12);
   color: var(--blue700);
-}
-
-.top-badge--demo {
-  background: rgba(2, 178, 108, 0.12);
-  color: var(--green700);
 }
 
 .hero-metrics {
@@ -65,8 +68,8 @@
 
 .hero-metric {
   padding: 16px 18px;
-  border-radius: 20px;
-  background: var(--grey50);
+  border-radius: 22px;
+  background: rgba(2, 32, 71, 0.03);
   display: grid;
   gap: 6px;
 }
@@ -82,82 +85,102 @@
   letter-spacing: -0.02em;
 }
 
-.info-pill {
-  background: var(--grey100);
-  color: var(--grey700);
-}
-
-.status-pill {
-  background: var(--grey100);
-  color: var(--grey700);
-}
-
-.status-pill.is-ready,
-.status-pill.is-clustering {
-  background: rgba(0, 100, 255, 0.12);
-  color: var(--blue700);
-}
-
-.status-pill.is-complete {
-  background: rgba(2, 178, 108, 0.12);
-  color: var(--green700);
-}
-
-.status-pill.is-error {
-  background: rgba(244, 63, 94, 0.12);
-  color: var(--red700);
-}
-
-.loader-panel {
-  min-height: 220px;
-  padding: 40px 24px;
-  display: grid;
-  place-items: center;
-  gap: 14px;
-  text-align: center;
-}
-
-.support-copy {
+.support-copy,
+.section-note {
   margin: 0;
   color: var(--grey600);
   font-size: 14px;
   line-height: 1.6;
 }
 
-.selection-summary {
-  padding: 0 24px 20px;
+.journey-value-strip {
+  padding: 0 24px 24px;
   display: grid;
-  gap: 6px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 
-.selection-summary strong {
+.journey-value {
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--grey50);
+  display: grid;
+  gap: 4px;
+}
+
+.journey-value strong {
+  font-size: 15px;
   color: var(--grey900);
-  font-size: 20px;
+}
+
+.journey-value span {
+  font-size: 13px;
+  color: var(--grey600);
+  line-height: 1.5;
+}
+
+.summary-panel,
+.publish-preview,
+.publish-success-card,
+.timeline-next-step {
+  padding: 20px 24px 24px;
+}
+
+.summary-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.summary-panel strong {
+  color: var(--grey900);
+  font-size: 22px;
   letter-spacing: -0.03em;
+}
+
+.inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.photo-grid,
+.timeline-preview-grid {
+  display: grid;
+  gap: 12px;
 }
 
 .photo-grid {
   padding: 0 24px 24px;
-  display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+}
+
+.timeline-preview-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .photo-card,
-.timeline-preview {
+.timeline-preview,
+.publish-cover {
   margin: 0;
   overflow: hidden;
   position: relative;
   background: var(--grey100);
 }
 
-.photo-card {
+.photo-card,
+.publish-cover {
   aspect-ratio: 1 / 1;
   border-radius: 20px;
 }
 
+.timeline-preview {
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+}
+
 .photo-card img,
-.timeline-preview img {
+.timeline-preview img,
+.publish-cover img {
   width: 100%;
   height: 100%;
   display: block;
@@ -224,15 +247,122 @@
   font-size: 13px;
 }
 
-.timeline-preview-grid {
+.timeline-next-step {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: 14px;
+  background:
+    linear-gradient(180deg, rgba(49, 130, 246, 0.08), rgba(49, 130, 246, 0)),
+    var(--white);
 }
 
-.timeline-preview {
-  aspect-ratio: 1 / 1;
-  border-radius: 16px;
+.timeline-next-step h3,
+.publish-preview h3,
+.publish-success-card h3 {
+  margin: 0;
+  color: var(--grey900);
+  font-size: 20px;
+  letter-spacing: -0.03em;
+}
+
+.timeline-next-step p,
+.publish-preview p,
+.publish-success-card p {
+  margin: 0;
+  color: var(--grey600);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.loader-panel {
+  min-height: 240px;
+  padding: 40px 24px;
+  display: grid;
+  place-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.progress-list {
+  padding: 0 24px 24px;
+  display: grid;
+  gap: 12px;
+}
+
+.progress-item {
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: var(--grey50);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.progress-item.is-active {
+  background: rgba(49, 130, 246, 0.08);
+}
+
+.progress-item.is-complete {
+  background: rgba(2, 178, 108, 0.08);
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: var(--grey300);
+}
+
+.progress-item.is-active .status-dot {
+  background: var(--blue500);
+  box-shadow: 0 0 0 6px rgba(49, 130, 246, 0.12);
+}
+
+.progress-item.is-complete .status-dot {
+  background: var(--green500);
+}
+
+.progress-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.progress-copy strong {
+  color: var(--grey900);
+  font-size: 15px;
+}
+
+.progress-copy span {
+  color: var(--grey600);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.publish-preview {
+  display: grid;
+  gap: 16px;
+}
+
+.publish-preview-card {
+  display: grid;
+  gap: 16px;
+}
+
+.publish-meta {
+  display: grid;
+  gap: 8px;
+}
+
+.path-chip {
+  width: fit-content;
+  background: rgba(49, 130, 246, 0.1);
+  color: var(--blue700);
+}
+
+.publish-success-card {
+  display: grid;
+  gap: 14px;
 }
 
 .visually-hidden {
@@ -248,7 +378,8 @@
 }
 
 @media (max-width: 720px) {
-  .hero-metrics {
+  .hero-metrics,
+  .journey-value-strip {
     grid-template-columns: 1fr;
   }
 

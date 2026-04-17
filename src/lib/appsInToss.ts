@@ -82,7 +82,7 @@ export async function triggerSuccessHaptic(): Promise<RuntimeActionResult> {
   if (getEnvironment() === 'browser') {
     return {
       ok: false,
-      message: '브라우저 미리보기에서는 햅틱을 호출할 수 없어요.',
+      message: '브라우저 미리보기에서는 햅틱을 실행할 수 없어요.',
     }
   }
 
@@ -91,7 +91,7 @@ export async function triggerSuccessHaptic(): Promise<RuntimeActionResult> {
   if (result === null) {
     return {
       ok: false,
-      message: '햅틱을 실행하지 못했어요.',
+      message: '햅틱 실행에 실패했어요.',
     }
   }
 
@@ -105,7 +105,7 @@ export async function persistLaunchMarker(): Promise<RuntimeActionResult> {
   if (getEnvironment() === 'browser') {
     return {
       ok: false,
-      message: 'Storage API는 샌드박스 또는 토스 앱 런타임에서만 확인할 수 있어요.',
+      message: 'Storage API는 샌드박스나 토스 앱 환경에서만 확인할 수 있어요.',
     }
   }
 

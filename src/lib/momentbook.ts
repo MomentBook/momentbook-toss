@@ -1,5 +1,3 @@
-export type ClusterMode = 'demo' | 'server'
-
 export type TossAlbumPhoto = {
   id: string
   dataUrl: string
@@ -17,7 +15,7 @@ export type PhotoAsset = {
   sortOrder: number
 }
 
-export type TimelineCluster = {
+export type JourneyMoment = {
   id: string
   title: string
   summary: string
@@ -26,38 +24,55 @@ export type TimelineCluster = {
   photos: PhotoAsset[]
 }
 
-type ClusterTimelineResult = {
-  mode: ClusterMode
-  timeline: TimelineCluster[]
+export type JourneyDraft = {
+  id: string
+  title: string
+  subtitle: string
+  slug: string
+  previewPath: string
+  coverPhoto: PhotoAsset | null
+  timeline: JourneyMoment[]
 }
 
-type ServerCluster = {
-  id?: string
-  title?: string
-  summary?: string
-  startedAt?: string
-  endedAt?: string
-  photoIds?: string[]
+export type OrganizingStep = {
+  id: 'sorting' | 'grouping' | 'narrating'
+  title: string
+  description: string
+  durationMs: number
 }
 
-type ServerClusterEnvelope = {
-  clusters?: ServerCluster[]
-  timeline?: ServerCluster[]
-}
+export const organizingSteps: OrganizingStep[] = [
+  {
+    id: 'sorting',
+    title: '촬영 순서를 읽고 있어요',
+    description: '사진이 찍힌 시간과 선택 순서를 기준으로 흐름을 먼저 맞춰요.',
+    durationMs: 850,
+  },
+  {
+    id: 'grouping',
+    title: '비슷한 장면을 묶고 있어요',
+    description: '연속된 분위기와 가까운 장면을 같은 여정 구간으로 정리해요.',
+    durationMs: 900,
+  },
+  {
+    id: 'narrating',
+    title: '공개하기 좋은 타임라인을 만들고 있어요',
+    description: '웹에 공개해도 이해하기 쉬운 제목과 순서로 마지막 정리를 해요.',
+    durationMs: 950,
+  },
+]
 
-const clusterEndpoint = import.meta.env.VITE_MOMENTBOOK_CLUSTER_ENDPOINT?.trim()
+const momentTitles = ['도착한 순간', '머문 장면', '이동하던 흐름', '마무리한 시간']
 
-const demoTitles = ['도착한 순간', '함께 머문 장면', '이동하는 흐름', '하루의 마무리']
-
-const demoSummaries = [
-  '가까운 시간대의 사진을 먼저 한 묶음으로 정리했어요.',
-  '비슷한 장면이 이어진 사진을 자연스럽게 붙였어요.',
-  '움직임이 이어지는 컷을 한 흐름으로 모았어요.',
-  '남은 장면을 마지막 묶음으로 정리했어요.',
+const momentSummaries = [
+  '가장 먼저 남긴 장면을 시작점으로 묶었어요.',
+  '비슷한 분위기의 사진을 한 구간으로 이어서 보여줘요.',
+  '움직이면서 분위기가 바뀐 구간을 자연스럽게 정리했어요.',
+  '마지막으로 남긴 장면을 여정의 끝으로 배치했어요.',
 ]
 
 export async function readBrowserPhotoFiles(files: File[]): Promise<PhotoAsset[]> {
-  const previews = await Promise.all(
+  return await Promise.all(
     files.map(async (file, index) => {
       const dataUrl = await readDataUrl(file)
 
@@ -74,8 +89,6 @@ export async function readBrowserPhotoFiles(files: File[]): Promise<PhotoAsset[]
       }
     }),
   )
-
-  return previews
 }
 
 export function normalizeTossAlbumPhotos(albumPhotos: TossAlbumPhoto[]): PhotoAsset[] {
@@ -92,41 +105,72 @@ export function normalizeTossAlbumPhotos(albumPhotos: TossAlbumPhoto[]): PhotoAs
   }))
 }
 
-export async function buildTimelineFromPhotos(photos: PhotoAsset[]): Promise<ClusterTimelineResult> {
-  if (clusterEndpoint == null || clusterEndpoint.length === 0) {
-    return {
-      mode: 'demo',
-      timeline: createDemoTimeline(photos),
-    }
-  }
-
-  const response = await fetch(clusterEndpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      photos: photos.map((photo) => ({
-        id: photo.id,
-        dataUrl: photo.dataUrl,
-        fileName: photo.fileName,
-        mimeType: photo.mimeType,
-        capturedAt: photo.capturedAt,
-        selectedOrder: photo.sortOrder,
-      })),
-    }),
-  })
-
-  if (!response.ok) {
-    throw new Error('서버에서 클러스터링 결과를 받지 못했어요.')
-  }
-
-  const payload = (await response.json()) as unknown
+export function buildDummyJourneyDraft(photos: PhotoAsset[]): JourneyDraft {
+  const orderedPhotos = [...photos].sort(comparePhotos)
+  const timeline = createJourneyMoments(orderedPhotos)
+  const dateRange = formatPhotoRange(orderedPhotos)
+  const slug = buildJourneySlug(orderedPhotos)
 
   return {
-    mode: 'server',
-    timeline: parseServerTimeline(payload, photos),
+    id: `journey-${slug}`,
+    title:
+      orderedPhotos.length === 0
+        ? '새로운 여정'
+        : dateRange === '촬영 정보가 없는 여정이에요'
+          ? `${orderedPhotos.length}장의 사진으로 만든 여정`
+          : `${dateRange}의 여정`,
+    subtitle: `${orderedPhotos.length}장의 사진을 ${timeline.length}개의 장면으로 정리했어요.`,
+    slug,
+    previewPath: `/journeys/${slug}`,
+    coverPhoto: timeline[0]?.photos[0] ?? orderedPhotos[0] ?? null,
+    timeline,
   }
+}
+
+export function formatCount(count: number, unit: string) {
+  return `${count}${unit}`
+}
+
+export function formatPhotoRange(photos: PhotoAsset[]) {
+  const dates = photos
+    .map((photo) => photo.capturedAt)
+    .filter((capturedAt): capturedAt is string => capturedAt != null)
+    .map((capturedAt) => new Date(capturedAt))
+    .filter((date) => !Number.isNaN(date.getTime()))
+    .sort((left, right) => left.getTime() - right.getTime())
+
+  if (dates.length === 0) {
+    return '촬영 정보가 없는 여정이에요'
+  }
+
+  if (dates.length === 1) {
+    return formatShortDate(dates[0])
+  }
+
+  return `${formatShortDate(dates[0])} - ${formatShortDate(dates[dates.length - 1])}`
+}
+
+export function formatMomentWindow(moment: JourneyMoment) {
+  if (moment.startedAt == null || moment.endedAt == null) {
+    return '촬영 시간이 없는 사진을 묶었어요.'
+  }
+
+  const start = new Date(moment.startedAt)
+  const end = new Date(moment.endedAt)
+
+  if (formatShortDateWithYear(start) === formatShortDateWithYear(end)) {
+    if (formatShortTime(start) === formatShortTime(end)) {
+      return `${formatShortDate(start)} ${formatShortTime(start)}`
+    }
+
+    return `${formatShortDate(start)} ${formatShortTime(start)} - ${formatShortTime(end)}`
+  }
+
+  return `${formatShortDateWithYear(start)} - ${formatShortDateWithYear(end)}`
+}
+
+export function formatSourceLabel(source: PhotoAsset['source']) {
+  return source === 'browser' ? '기기 파일' : '토스 사진첩'
 }
 
 async function readDataUrl(file: File) {
@@ -143,106 +187,44 @@ async function readDataUrl(file: File) {
     }
 
     reader.onerror = () => {
-      reject(new Error('사진을 읽는 중에 문제가 생겼어요.'))
+      reject(new Error('사진을 읽는 중 문제가 생겼어요.'))
     }
 
     reader.readAsDataURL(file)
   })
 }
 
-function createDemoTimeline(photos: PhotoAsset[]) {
-  const ordered = [...photos].sort(comparePhotos)
-  const groupCount = Math.min(4, Math.max(1, Math.ceil(ordered.length / 5)))
-  const chunkSize = Math.ceil(ordered.length / groupCount)
-  const timeline: TimelineCluster[] = []
+function createJourneyMoments(photos: PhotoAsset[]) {
+  if (photos.length === 0) {
+    return []
+  }
+
+  const groupCount = Math.min(4, Math.max(1, Math.ceil(photos.length / 4)))
+  const chunkSize = Math.ceil(photos.length / groupCount)
+  const timeline: JourneyMoment[] = []
 
   for (let index = 0; index < groupCount; index += 1) {
-    const clusteredPhotos = ordered.slice(index * chunkSize, (index + 1) * chunkSize)
+    const groupedPhotos = photos.slice(index * chunkSize, (index + 1) * chunkSize)
 
-    if (clusteredPhotos.length === 0) {
+    if (groupedPhotos.length === 0) {
       continue
     }
 
-    const bounds = inferBounds(clusteredPhotos)
+    const bounds = inferBounds(groupedPhotos)
 
     timeline.push({
-      id: `demo-cluster-${index + 1}`,
-      title: demoTitles[index] ?? `정리한 장면 ${index + 1}`,
-      summary: demoSummaries[index] ?? `${clusteredPhotos.length}장을 가까운 흐름으로 정리했어요.`,
+      id: `moment-${index + 1}`,
+      title: momentTitles[index] ?? `정리한 장면 ${index + 1}`,
+      summary:
+        momentSummaries[index] ??
+        `${groupedPhotos.length}장의 사진을 흐름이 이어지는 순서로 정리했어요.`,
       startedAt: bounds.startedAt,
       endedAt: bounds.endedAt,
-      photos: clusteredPhotos,
+      photos: groupedPhotos,
     })
   }
 
   return timeline
-}
-
-function parseServerTimeline(payload: unknown, photos: PhotoAsset[]) {
-  if (!isRecord(payload)) {
-    throw new Error('클러스터 응답 형식이 맞지 않아요.')
-  }
-
-  const envelope = payload as ServerClusterEnvelope
-  const clusters = Array.isArray(envelope.clusters)
-    ? envelope.clusters
-    : Array.isArray(envelope.timeline)
-      ? envelope.timeline
-      : null
-
-  if (clusters == null) {
-    throw new Error('클러스터 응답 형식이 맞지 않아요.')
-  }
-
-  const photoMap = new Map(photos.map((photo) => [photo.id, photo]))
-
-  return clusters.map((cluster, index) => parseServerCluster(cluster, index, photoMap))
-}
-
-function parseServerCluster(
-  cluster: unknown,
-  index: number,
-  photoMap: Map<string, PhotoAsset>,
-): TimelineCluster {
-  if (!isRecord(cluster)) {
-    throw new Error('클러스터 응답 형식이 맞지 않아요.')
-  }
-
-  if (typeof cluster.title !== 'string' || !Array.isArray(cluster.photoIds)) {
-    throw new Error('클러스터 응답 형식이 맞지 않아요.')
-  }
-
-  const photos = cluster.photoIds.map((photoId) => {
-    if (typeof photoId !== 'string') {
-      throw new Error('클러스터 응답 형식이 맞지 않아요.')
-    }
-
-    const photo = photoMap.get(photoId)
-
-    if (photo == null) {
-      throw new Error('응답에 포함된 사진을 현재 선택 목록에서 찾지 못했어요.')
-    }
-
-    return photo
-  })
-
-  if (photos.length === 0) {
-    throw new Error('응답에 비어 있는 클러스터가 포함되어 있어요.')
-  }
-
-  const bounds = inferBounds(photos)
-
-  return {
-    id: typeof cluster.id === 'string' ? cluster.id : `server-cluster-${index + 1}`,
-    title: cluster.title.trim().length > 0 ? cluster.title : `묶음 ${index + 1}`,
-    summary:
-      typeof cluster.summary === 'string' && cluster.summary.trim().length > 0
-        ? cluster.summary
-        : `${photos.length}장을 가까운 흐름으로 정리했어요.`,
-    startedAt: normalizeTimestamp(cluster.startedAt) ?? bounds.startedAt,
-    endedAt: normalizeTimestamp(cluster.endedAt) ?? bounds.endedAt,
-    photos,
-  }
 }
 
 function inferBounds(photos: PhotoAsset[]) {
@@ -259,18 +241,21 @@ function inferBounds(photos: PhotoAsset[]) {
   }
 }
 
-function normalizeTimestamp(value: unknown) {
-  if (typeof value !== 'string') {
-    return null
-  }
+function buildJourneySlug(photos: PhotoAsset[]) {
+  const datedPhoto = photos.find((photo) => photo.capturedAt != null)
+  const dateLabel =
+    datedPhoto?.capturedAt != null
+      ? new Date(datedPhoto.capturedAt).toISOString().slice(0, 10).replaceAll('-', '')
+      : 'draft'
 
-  const parsed = new Date(value)
-  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString()
+  return `momentbook-${dateLabel}-${photos.length}`
 }
 
 function comparePhotos(left: PhotoAsset, right: PhotoAsset) {
-  const leftTime = left.capturedAt == null ? Number.MAX_SAFE_INTEGER : new Date(left.capturedAt).getTime()
-  const rightTime = right.capturedAt == null ? Number.MAX_SAFE_INTEGER : new Date(right.capturedAt).getTime()
+  const leftTime =
+    left.capturedAt == null ? Number.MAX_SAFE_INTEGER : new Date(left.capturedAt).getTime()
+  const rightTime =
+    right.capturedAt == null ? Number.MAX_SAFE_INTEGER : new Date(right.capturedAt).getTime()
 
   if (leftTime !== rightTime) {
     return leftTime - rightTime
@@ -279,6 +264,24 @@ function comparePhotos(left: PhotoAsset, right: PhotoAsset) {
   return left.sortOrder - right.sortOrder
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value != null
+function formatShortDate(date: Date) {
+  return new Intl.DateTimeFormat('ko-KR', {
+    month: 'long',
+    day: 'numeric',
+  }).format(date)
+}
+
+function formatShortDateWithYear(date: Date) {
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date)
+}
+
+function formatShortTime(date: Date) {
+  return new Intl.DateTimeFormat('ko-KR', {
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date)
 }
