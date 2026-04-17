@@ -11,8 +11,8 @@
     sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: var(--grey900);
-  background: var(--grey50);
+  color: #191f28;
+  background: #f2f5f8;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -32,7 +32,7 @@ body,
 body {
   margin: 0;
   min-width: 320px;
-  background: var(--grey50);
+  background: #f2f5f8;
 }
 
 button,

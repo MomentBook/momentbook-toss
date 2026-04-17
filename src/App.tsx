@@ -7,7 +7,7 @@ import {
   useState,
   type ChangeEvent,
 } from 'react'
-import { FixedBottomCTA, Result } from '@toss/tds-mobile'
+import { Button, FixedBottomCTA } from '@toss/tds-mobile'
 import './App.css'
 import {
   FetchAlbumPhotosPermissionError,
@@ -19,9 +19,9 @@ import {
 import { buildHistoryState, getRequestedScreen, toScreenHash, type Screen } from './lib/navigation'
 import {
   buildDummyJourneyDraft,
-  normalizeTossAlbumPhotos,
   organizingSteps,
   readBrowserPhotoFiles,
+  normalizeTossAlbumPhotos,
   type JourneyDraft,
   type PhotoAsset,
 } from './lib/momentbook'
@@ -60,22 +60,53 @@ const runtimeCopy: Record<
   }
 > = {
   browser: {
-    badge: '웹',
-    helper: '사진을 선택해 주세요.',
-    pickerLabel: '사진 선택',
-    emptyDescription: '사진을 선택해 주세요.',
+    badge: '웹 미리보기',
+    helper: '사진을 선택하면 시간순으로 정리해서 모먼트북 초안을 만들어드려요.',
+    pickerLabel: '사진 가져오기',
+    emptyDescription: '기기에서 여행 사진을 선택해 주세요.',
   },
   sandbox: {
     badge: '샌드박스',
-    helper: '토스 사진첩에서 선택해요.',
-    pickerLabel: '사진첩 열기',
-    emptyDescription: '사진을 선택해 주세요.',
+    helper: '토스 사진첩 연동 흐름을 미리 확인할 수 있어요.',
+    pickerLabel: '토스 사진첩 열기',
+    emptyDescription: '연결된 사진첩에서 정리할 사진을 골라 주세요.',
   },
   toss: {
-    badge: 'Toss 앱',
-    helper: '토스 사진첩에서 바로 시작해요.',
-    pickerLabel: '사진첩 열기',
-    emptyDescription: '사진을 선택해 주세요.',
+    badge: 'Toss 연결',
+    helper: '토스 사진첩에서 선택한 사진을 한 번에 여행 타임라인으로 정리해드려요.',
+    pickerLabel: '토스 사진첩 열기',
+    emptyDescription: '여행 사진을 선택하면 바로 정리 초안을 시작해요.',
+  },
+}
+
+const orderedScreens: Screen[] = ['upload', 'review', 'organizing', 'timeline', 'publish']
+
+const screenMeta: Record<
+  Screen,
+  {
+    label: string
+    description: string
+  }
+> = {
+  upload: {
+    label: '사진 선택',
+    description: '여행 사진을 모아 모먼트북의 첫 장을 시작해요.',
+  },
+  review: {
+    label: '선택 검토',
+    description: '정리 전에 사진 수와 흐름을 한 번 더 확인해요.',
+  },
+  organizing: {
+    label: '자동 정리',
+    description: '시간과 분위기를 기준으로 사진을 모먼트 단위로 묶는 중이에요.',
+  },
+  timeline: {
+    label: '타임라인 확인',
+    description: '정리된 여정을 미리 보고 공개 흐름을 다듬어요.',
+  },
+  publish: {
+    label: '발행 준비',
+    description: '대표 이미지와 공개용 페이지 구성을 확인해요.',
   },
 }
 
@@ -362,6 +393,7 @@ function App() {
 
   const currentDraft = flow.draft
   const copy = runtimeCopy[runtime]
+  const currentStep = orderedScreens.indexOf(screen)
 
   let content = null
 
@@ -379,7 +411,6 @@ function App() {
       content = (
         <ReviewScreen
           photos={flow.photos}
-          runtimeLabel={copy.badge}
           onChangePhotos={() => void handlePickPhotos()}
         />
       )
@@ -411,14 +442,53 @@ function App() {
 
   return (
     <main className="app-shell">
+      <div className="app-shell__glow app-shell__glow--top" />
+      <div className="app-shell__glow app-shell__glow--bottom" />
+
       <div className="screen-shell">
+        <header className="app-chrome">
+          <div>
+            <p className="app-chrome__eyebrow">Momentbook</p>
+            <h1 className="app-chrome__title">{screenMeta[screen].label}</h1>
+            <p className="app-chrome__description">{screenMeta[screen].description}</p>
+          </div>
+
+          <div className="app-chrome__meta">
+            <span className="app-pill app-pill--brand">{copy.badge}</span>
+            <span className="app-pill">
+              {currentStep + 1} / {orderedScreens.length}
+            </span>
+          </div>
+        </header>
+
+        <nav className="journey-progress" aria-label="정리 진행 단계">
+          {orderedScreens.map((progressScreen, index) => {
+            const state =
+              index < currentStep ? 'done' : index === currentStep ? 'active' : 'upcoming'
+
+            return (
+              <div
+                className={`journey-step journey-step--${state}`}
+                key={progressScreen}
+              >
+                <span className="journey-step__bar" />
+                <span className="journey-step__label">{screenMeta[progressScreen].label}</span>
+              </div>
+            )
+          })}
+        </nav>
+
         {flow.errorMessage != null ? (
-          <section className="surface-card">
-            <Result
-              title="다시 시도해 주세요"
-              description={flow.errorMessage}
-              button={<Result.Button onClick={() => void handlePickPhotos()}>다시 시도</Result.Button>}
-            />
+          <section className="feedback-card feedback-card--error">
+            <div>
+              <p className="feedback-card__eyebrow">사진을 불러오지 못했어요</p>
+              <h2>한 번 더 시도해 주세요.</h2>
+              <p>{flow.errorMessage}</p>
+            </div>
+
+            <Button display="full" size="large" variant="weak" onClick={() => void handlePickPhotos()}>
+              다시 시도
+            </Button>
           </section>
         ) : null}
 
@@ -428,7 +498,7 @@ function App() {
       {screen === 'upload' ? (
         flow.photos.length > 0 ? (
           <FixedBottomCTA hideOnScroll onClick={() => navigate('review', 'push')}>
-            사진 확인
+            선택한 사진 확인하기
           </FixedBottomCTA>
         ) : (
           <FixedBottomCTA hideOnScroll onClick={() => void handlePickPhotos()}>
@@ -439,20 +509,20 @@ function App() {
 
       {screen === 'review' ? (
         <FixedBottomCTA hideOnScroll disabled={flow.photos.length === 0} onClick={handleStartOrganizing}>
-          정리하기
+          이 사진으로 정리하기
         </FixedBottomCTA>
       ) : null}
 
       {screen === 'timeline' ? (
         <FixedBottomCTA hideOnScroll disabled={currentDraft == null} onClick={handleOpenPublish}>
-          공개하기
+          이 여정 게시하기
         </FixedBottomCTA>
       ) : null}
 
       {screen === 'publish' ? (
         flow.publishStatus === 'complete' ? (
           <FixedBottomCTA hideOnScroll onClick={handleRestart}>
-            다시 시작하기
+            새 여정 만들기
           </FixedBottomCTA>
         ) : (
           <FixedBottomCTA
@@ -461,7 +531,7 @@ function App() {
             loading={flow.publishStatus === 'publishing'}
             onClick={handlePublish}
           >
-            페이지 만들기
+            모먼트북 페이지 만들기
           </FixedBottomCTA>
         )
       ) : null}
@@ -480,7 +550,7 @@ function App() {
 
 function getPhotoSelectionMessage(error: unknown) {
   if (error instanceof FetchAlbumPhotosPermissionError) {
-    return '사진 접근 권한을 허용해야 선택한 사진을 여정으로 정리할 수 있어요.'
+    return '사진 접근 권한이 있어야 선택한 사진을 모먼트북으로 정리할 수 있어요.'
   }
 
   if (error instanceof Error && error.message.trim().length > 0) {

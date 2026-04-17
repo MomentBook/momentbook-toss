@@ -44,31 +44,31 @@ export type OrganizingStep = {
 export const organizingSteps: OrganizingStep[] = [
   {
     id: 'sorting',
-    title: '촬영 순서를 읽고 있어요',
-    description: '사진이 찍힌 시간과 선택 순서를 기준으로 흐름을 먼저 맞춰요.',
+    title: '촬영 순서대로 정렬하고 있어요',
+    description: '시간 정보를 기준으로 사진의 흐름을 먼저 맞추고 있어요.',
     durationMs: 850,
   },
   {
     id: 'grouping',
-    title: '비슷한 장면을 묶고 있어요',
-    description: '연속된 분위기와 가까운 장면을 같은 여정 구간으로 정리해요.',
+    title: '비슷한 장면끼리 묶고 있어요',
+    description: '분위기와 구도를 살펴 여정의 모먼트 단위로 나누고 있어요.',
     durationMs: 900,
   },
   {
     id: 'narrating',
-    title: '공개하기 좋은 타임라인을 만들고 있어요',
-    description: '웹에 공개해도 이해하기 쉬운 제목과 순서로 마지막 정리를 해요.',
+    title: '공개하기 좋은 이야기로 다듬고 있어요',
+    description: '대표 사진과 제목을 골라 읽기 쉬운 타임라인으로 정리하고 있어요.',
     durationMs: 950,
   },
 ]
 
-const momentTitles = ['도착한 순간', '머문 장면', '이동하던 흐름', '마무리한 시간']
+const momentTitles = ['여행의 시작', '머문 장면', '이어진 이동', '마무리한 순간']
 
 const momentSummaries = [
-  '가장 먼저 남긴 장면을 시작점으로 묶었어요.',
-  '비슷한 분위기의 사진을 한 구간으로 이어서 보여줘요.',
-  '움직이면서 분위기가 바뀐 구간을 자연스럽게 정리했어요.',
-  '마지막으로 남긴 장면을 여정의 끝으로 배치했어요.',
+  '여행이 시작되는 분위기가 자연스럽게 이어지도록 정리했어요.',
+  '머무른 장소와 비슷한 공기를 가진 사진을 한 장면으로 묶었어요.',
+  '이동하면서 달라지는 분위기가 끊기지 않도록 이어서 보여드려요.',
+  '기억에 오래 남을 마무리 장면을 마지막에 배치했어요.',
 ]
 
 export async function readBrowserPhotoFiles(files: File[]): Promise<PhotoAsset[]> {
@@ -115,11 +115,11 @@ export function buildDummyJourneyDraft(photos: PhotoAsset[]): JourneyDraft {
     id: `journey-${slug}`,
     title:
       orderedPhotos.length === 0
-        ? '새로운 여정'
-        : dateRange === '촬영 정보가 없는 여정이에요'
+        ? '비어 있는 여정'
+        : dateRange === '촬영 정보가 없는 사진이에요'
           ? `${orderedPhotos.length}장의 사진으로 만든 여정`
-          : `${dateRange}의 여정`,
-    subtitle: `${orderedPhotos.length}장의 사진을 ${timeline.length}개의 장면으로 정리했어요.`,
+          : `${dateRange} 여행`,
+    subtitle: `${orderedPhotos.length}장의 사진을 ${timeline.length}개의 모먼트로 정리했어요.`,
     slug,
     previewPath: `/journeys/${slug}`,
     coverPhoto: timeline[0]?.photos[0] ?? orderedPhotos[0] ?? null,
@@ -140,7 +140,7 @@ export function formatPhotoRange(photos: PhotoAsset[]) {
     .sort((left, right) => left.getTime() - right.getTime())
 
   if (dates.length === 0) {
-    return '촬영 정보가 없는 여정이에요'
+    return '촬영 정보가 없는 사진이에요'
   }
 
   if (dates.length === 1) {
@@ -152,7 +152,7 @@ export function formatPhotoRange(photos: PhotoAsset[]) {
 
 export function formatMomentWindow(moment: JourneyMoment) {
   if (moment.startedAt == null || moment.endedAt == null) {
-    return '촬영 시간이 없는 사진을 묶었어요.'
+    return '촬영 시간이 없는 사진을 모아두었어요.'
   }
 
   const start = new Date(moment.startedAt)
@@ -170,7 +170,7 @@ export function formatMomentWindow(moment: JourneyMoment) {
 }
 
 export function formatSourceLabel(source: PhotoAsset['source']) {
-  return source === 'browser' ? '기기 파일' : '토스 사진첩'
+  return source === 'browser' ? '기기에서 선택한 사진' : '토스 사진첩'
 }
 
 async function readDataUrl(file: File) {
@@ -187,7 +187,7 @@ async function readDataUrl(file: File) {
     }
 
     reader.onerror = () => {
-      reject(new Error('사진을 읽는 중 문제가 생겼어요.'))
+      reject(new Error('사진을 읽는 중 문제가 발생했어요.'))
     }
 
     reader.readAsDataURL(file)
@@ -214,10 +214,10 @@ function createJourneyMoments(photos: PhotoAsset[]) {
 
     timeline.push({
       id: `moment-${index + 1}`,
-      title: momentTitles[index] ?? `정리한 장면 ${index + 1}`,
+      title: momentTitles[index] ?? `정리된 순간 ${index + 1}`,
       summary:
         momentSummaries[index] ??
-        `${groupedPhotos.length}장의 사진을 흐름이 이어지는 순서로 정리했어요.`,
+        `${groupedPhotos.length}장의 사진이 자연스럽게 이어지도록 하나의 흐름으로 묶었어요.`,
       startedAt: bounds.startedAt,
       endedAt: bounds.endedAt,
       photos: groupedPhotos,
