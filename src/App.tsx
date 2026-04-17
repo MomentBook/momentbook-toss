@@ -11,6 +11,7 @@ import { FixedBottomCTA, useToast } from '@toss/tds-mobile'
 import './App.css'
 import {
   getFeaturedJourneyById,
+  getFeaturedJourneyMomentById,
 } from './lib/featuredJourneys'
 import {
   FetchAlbumPhotosPermissionError,
@@ -22,6 +23,7 @@ import {
 import {
   buildHistoryState,
   getRequestedFeaturedJourneyId,
+  getRequestedFeaturedJourneyMomentId,
   getRequestedScreen,
   toScreenHash,
   type Screen,
@@ -38,6 +40,7 @@ import {
 } from './lib/momentbook'
 import { DiscoverScreen } from './screens/DiscoverScreen'
 import { FeaturedJourneyScreen } from './screens/FeaturedJourneyScreen'
+import { FeaturedTimelineDetailScreen } from './screens/FeaturedTimelineDetailScreen'
 import { OrganizingScreen } from './screens/OrganizingScreen'
 import { PublishScreen } from './screens/PublishScreen'
 import { TimelineScreen } from './screens/TimelineScreen'
@@ -94,8 +97,12 @@ const screenMeta: Record<
     description: '다른 사람의 기록을 먼저 보고 내 여정의 시작점을 찾을 수 있어요.',
   },
   featuredJourney: {
-    label: '샘플 여정',
+    label: '다른 사람의 여정',
     description: '둘러본 여정의 흐름을 자세히 볼 수 있어요.',
+  },
+  featuredTimelineDetail: {
+    label: '타임라인 상세',
+    description: '선택한 장면의 사진과 설명을 자세히 볼 수 있어요.',
   },
   upload: {
     label: '사진 업로드',
@@ -150,6 +157,7 @@ function resolveAccessibleScreen(
   requested: Screen,
   state: FlowState,
   featuredJourneyId: string | null,
+  featuredJourneyMomentId: string | null,
 ): Screen {
   if (requested === 'discover') {
     return 'discover'
@@ -157,6 +165,18 @@ function resolveAccessibleScreen(
 
   if (requested === 'featuredJourney') {
     return getFeaturedJourneyById(featuredJourneyId) != null ? 'featuredJourney' : 'discover'
+  }
+
+  if (requested === 'featuredTimelineDetail') {
+    const journey = getFeaturedJourneyById(featuredJourneyId)
+
+    if (journey == null) {
+      return 'discover'
+    }
+
+    return getFeaturedJourneyMomentById(journey, featuredJourneyMomentId) != null
+      ? 'featuredTimelineDetail'
+      : 'featuredJourney'
   }
 
   if (requested === 'upload') {
@@ -210,17 +230,22 @@ function reducer(state: FlowState, action: FlowAction): FlowState {
 
 function App() {
   const initialFeaturedJourneyId = getRequestedFeaturedJourneyId(window.history.state)
+  const initialFeaturedJourneyMomentId = getRequestedFeaturedJourneyMomentId(window.history.state)
   const toast = useToast()
   const [runtime] = useState<RuntimeEnvironment>(() => getRuntimeEnvironment())
   const [flow, dispatch] = useReducer(reducer, initialFlowState)
   const [selectedFeaturedJourneyId, setSelectedFeaturedJourneyId] = useState<string | null>(
     initialFeaturedJourneyId,
   )
+  const [selectedFeaturedJourneyMomentId, setSelectedFeaturedJourneyMomentId] = useState<string | null>(
+    initialFeaturedJourneyMomentId,
+  )
   const [screen, setScreen] = useState<Screen>(() =>
     resolveAccessibleScreen(
       getRequestedScreen(window.location.hash, window.history.state) ?? 'discover',
       initialFlowState,
       initialFeaturedJourneyId,
+      initialFeaturedJourneyMomentId,
     ),
   )
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -230,6 +255,7 @@ function App() {
     mode: 'push' | 'replace' = 'push',
     options?: {
       featuredJourneyId?: string
+      featuredJourneyMomentId?: string
     },
   ) => {
     const url = toScreenHash(nextScreen)
@@ -241,16 +267,28 @@ function App() {
       window.history.pushState(state, '', url)
     }
 
-    setSelectedFeaturedJourneyId(nextScreen === 'featuredJourney' ? options?.featuredJourneyId ?? null : null)
+    setSelectedFeaturedJourneyId(
+      nextScreen === 'featuredJourney' || nextScreen === 'featuredTimelineDetail'
+        ? options?.featuredJourneyId ?? null
+        : null,
+    )
+    setSelectedFeaturedJourneyMomentId(
+      nextScreen === 'featuredTimelineDetail' ? options?.featuredJourneyMomentId ?? null : null,
+    )
     setScreen(nextScreen)
   }, [])
 
   const navigate = useCallback(
     (requested: Screen, mode: 'push' | 'replace' = 'push', stateSnapshot: FlowState = flow) => {
-      const nextScreen = resolveAccessibleScreen(requested, stateSnapshot, selectedFeaturedJourneyId)
+      const nextScreen = resolveAccessibleScreen(
+        requested,
+        stateSnapshot,
+        selectedFeaturedJourneyId,
+        selectedFeaturedJourneyMomentId,
+      )
       setScreenHistory(nextScreen, mode)
     },
-    [flow, selectedFeaturedJourneyId, setScreenHistory],
+    [flow, selectedFeaturedJourneyId, selectedFeaturedJourneyMomentId, setScreenHistory],
   )
 
   useEffect(() => {
@@ -259,19 +297,39 @@ function App() {
         screen,
         screen === 'featuredJourney' && selectedFeaturedJourneyId != null
           ? { featuredJourneyId: selectedFeaturedJourneyId }
+          : screen === 'featuredTimelineDetail' &&
+              selectedFeaturedJourneyId != null &&
+              selectedFeaturedJourneyMomentId != null
+            ? {
+                featuredJourneyId: selectedFeaturedJourneyId,
+                featuredJourneyMomentId: selectedFeaturedJourneyMomentId,
+              }
           : undefined,
       ),
       '',
       toScreenHash(screen),
     )
-  }, [screen, selectedFeaturedJourneyId])
+  }, [screen, selectedFeaturedJourneyId, selectedFeaturedJourneyMomentId])
 
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       const requestedScreen = getRequestedScreen(window.location.hash, event.state) ?? 'discover'
       const nextFeaturedJourneyId = getRequestedFeaturedJourneyId(event.state)
-      const nextScreen = resolveAccessibleScreen(requestedScreen, flow, nextFeaturedJourneyId)
-      setSelectedFeaturedJourneyId(nextScreen === 'featuredJourney' ? nextFeaturedJourneyId : null)
+      const nextFeaturedJourneyMomentId = getRequestedFeaturedJourneyMomentId(event.state)
+      const nextScreen = resolveAccessibleScreen(
+        requestedScreen,
+        flow,
+        nextFeaturedJourneyId,
+        nextFeaturedJourneyMomentId,
+      )
+      setSelectedFeaturedJourneyId(
+        nextScreen === 'featuredJourney' || nextScreen === 'featuredTimelineDetail'
+          ? nextFeaturedJourneyId
+          : null,
+      )
+      setSelectedFeaturedJourneyMomentId(
+        nextScreen === 'featuredTimelineDetail' ? nextFeaturedJourneyMomentId : null,
+      )
       setScreen(nextScreen)
     }
 
@@ -423,17 +481,49 @@ function App() {
     [setScreenHistory],
   )
 
+  const handleOpenFeaturedTimelineDetail = useCallback(
+    (momentId: string) => {
+      if (selectedFeaturedJourneyId == null) {
+        return
+      }
+
+      setScreenHistory('featuredTimelineDetail', 'push', {
+        featuredJourneyId: selectedFeaturedJourneyId,
+        featuredJourneyMomentId: momentId,
+      })
+    },
+    [selectedFeaturedJourneyId, setScreenHistory],
+  )
+
   const handleBackToDiscover = useCallback(() => {
     navigate('discover', 'replace')
   }, [navigate])
 
+  const handleBackToFeaturedJourney = useCallback(() => {
+    if (selectedFeaturedJourneyId == null) {
+      navigate('discover', 'replace')
+      return
+    }
+
+    setScreenHistory('featuredJourney', 'replace', {
+      featuredJourneyId: selectedFeaturedJourneyId,
+    })
+  }, [navigate, selectedFeaturedJourneyId, setScreenHistory])
+
   const currentDraft = flow.draft
   const currentFeaturedJourney = getFeaturedJourneyById(selectedFeaturedJourneyId)
+  const currentFeaturedJourneyMoment = getFeaturedJourneyMomentById(
+    currentFeaturedJourney,
+    selectedFeaturedJourneyMomentId,
+  )
   const copy = runtimeCopy[runtime]
   const unassignedPhotoCount = getUnassignedPhotos(flow.photos, flow.moments).length
   const hasGroupedMoment = flow.moments.some((moment) => moment.photos.length > 0)
   const shouldShowChrome =
-    screen !== 'upload' && screen !== 'discover' && screen !== 'featuredJourney'
+    screen !== 'upload' &&
+    screen !== 'discover' &&
+    screen !== 'featuredJourney' &&
+    screen !== 'featuredTimelineDetail'
 
   let content = null
 
@@ -451,6 +541,23 @@ function App() {
           <FeaturedJourneyScreen
             journey={currentFeaturedJourney}
             onBack={handleBackToDiscover}
+            onOpenTimeline={handleOpenFeaturedTimelineDetail}
+          />
+        )
+      break
+    case 'featuredTimelineDetail':
+      content =
+        currentFeaturedJourney == null || currentFeaturedJourneyMoment == null ? null : (
+          <FeaturedTimelineDetailScreen
+            journey={currentFeaturedJourney}
+            moment={currentFeaturedJourneyMoment}
+            momentIndex={Math.max(
+              currentFeaturedJourney.moments.findIndex(
+                (moment) => moment.id === currentFeaturedJourneyMoment.id,
+              ),
+              0,
+            )}
+            onBack={handleBackToFeaturedJourney}
           />
         )
       break
@@ -518,12 +625,6 @@ function App() {
       {screen === 'discover' ? (
         <FixedBottomCTA hideOnScroll onClick={() => navigate('upload', 'push')}>
           {flow.photos.length > 0 ? '선택한 사진 이어서 정리하기' : '내 여정 추가하기'}
-        </FixedBottomCTA>
-      ) : null}
-
-      {screen === 'featuredJourney' ? (
-        <FixedBottomCTA hideOnScroll onClick={() => navigate('upload', 'push')}>
-          {flow.photos.length > 0 ? '선택한 사진 이어서 정리하기' : '내 여정 시작하기'}
         </FixedBottomCTA>
       ) : null}
 
