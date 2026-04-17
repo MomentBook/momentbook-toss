@@ -60,22 +60,22 @@ const runtimeCopy: Record<
   }
 > = {
   browser: {
-    badge: '웹 미리보기',
-    helper: '기기 파일을 바로 올려서 사진 정리 흐름과 화면 구성을 빠르게 확인할 수 있어요.',
-    pickerLabel: '사진 가져오기',
-    emptyDescription: '먼저 사진을 골라야 자동 정리 흐름을 이어서 볼 수 있어요.',
+    badge: '웹',
+    helper: '사진을 선택해 주세요.',
+    pickerLabel: '사진 선택',
+    emptyDescription: '사진을 선택해 주세요.',
   },
   sandbox: {
-    badge: '샌드박스 테스트',
-    helper: '토스 사진첩 권한과 선택 흐름을 샌드박스에서 실제와 가깝게 확인할 수 있어요.',
-    pickerLabel: '토스 사진첩 열기',
-    emptyDescription: '샌드박스에서 사진을 선택하면 바로 더미 여정 타임라인을 만들 수 있어요.',
+    badge: '샌드박스',
+    helper: '토스 사진첩에서 선택해요.',
+    pickerLabel: '사진첩 열기',
+    emptyDescription: '사진을 선택해 주세요.',
   },
   toss: {
     badge: 'Toss 앱',
-    helper: '토스 앱 안에서 사진을 고르고 정리된 여정과 공개 유도 흐름까지 자연스럽게 이어져요.',
-    pickerLabel: '토스 사진첩 열기',
-    emptyDescription: '토스 사진첩에서 사진을 고르면 여정 타임라인과 공개 화면까지 바로 이어져요.',
+    helper: '토스 사진첩에서 바로 시작해요.',
+    pickerLabel: '사진첩 열기',
+    emptyDescription: '사진을 선택해 주세요.',
   },
 }
 
@@ -371,7 +371,6 @@ function App() {
         <UploadScreen
           copy={copy}
           photos={flow.photos}
-          onContinue={() => navigate('review', 'push')}
           onPickPhotos={() => void handlePickPhotos()}
         />
       )
@@ -429,7 +428,7 @@ function App() {
       {screen === 'upload' ? (
         flow.photos.length > 0 ? (
           <FixedBottomCTA hideOnScroll onClick={() => navigate('review', 'push')}>
-            선택한 사진 이어서 보기
+            사진 확인
           </FixedBottomCTA>
         ) : (
           <FixedBottomCTA hideOnScroll onClick={() => void handlePickPhotos()}>
@@ -440,20 +439,20 @@ function App() {
 
       {screen === 'review' ? (
         <FixedBottomCTA hideOnScroll disabled={flow.photos.length === 0} onClick={handleStartOrganizing}>
-          자동으로 정리하기
+          정리하기
         </FixedBottomCTA>
       ) : null}
 
       {screen === 'timeline' ? (
         <FixedBottomCTA hideOnScroll disabled={currentDraft == null} onClick={handleOpenPublish}>
-          웹에 공개하기
+          공개하기
         </FixedBottomCTA>
       ) : null}
 
       {screen === 'publish' ? (
         flow.publishStatus === 'complete' ? (
           <FixedBottomCTA hideOnScroll onClick={handleRestart}>
-            새 여정 만들기
+            다시 시작하기
           </FixedBottomCTA>
         ) : (
           <FixedBottomCTA
@@ -462,7 +461,7 @@ function App() {
             loading={flow.publishStatus === 'publishing'}
             onClick={handlePublish}
           >
-            공개 페이지 만들기
+            페이지 만들기
           </FixedBottomCTA>
         )
       ) : null}

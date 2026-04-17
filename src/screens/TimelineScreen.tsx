@@ -1,10 +1,5 @@
 import { ListHeader, Top } from '@toss/tds-mobile'
-import {
-  formatCount,
-  formatMomentWindow,
-  formatSourceLabel,
-  type JourneyDraft,
-} from '../lib/momentbook'
+import { formatCount, formatMomentWindow, type JourneyDraft } from '../lib/momentbook'
 
 type TimelineScreenProps = {
   draft: JourneyDraft
@@ -13,7 +8,6 @@ type TimelineScreenProps = {
 
 export function TimelineScreen({ draft, onChangePhotos }: TimelineScreenProps) {
   const photoCount = draft.timeline.reduce((total, moment) => total + moment.photos.length, 0)
-  const sourceLabel = draft.coverPhoto == null ? '-' : formatSourceLabel(draft.coverPhoto.source)
 
   return (
     <>
@@ -42,10 +36,6 @@ export function TimelineScreen({ draft, onChangePhotos }: TimelineScreenProps) {
                 <span>장면</span>
                 <strong>{formatCount(draft.timeline.length, '개')}</strong>
               </div>
-              <div className="hero-metric">
-                <span>가져온 방식</span>
-                <strong>{sourceLabel}</strong>
-              </div>
             </div>
           }
         />
@@ -55,18 +45,8 @@ export function TimelineScreen({ draft, onChangePhotos }: TimelineScreenProps) {
         <ListHeader
           title={
             <ListHeader.TitleParagraph typography="t5" fontWeight="bold">
-              정리된 타임라인
+              타임라인
             </ListHeader.TitleParagraph>
-          }
-          description={
-            <ListHeader.DescriptionParagraph>
-              장면별 제목과 짧은 설명을 붙여서 처음 보는 사람도 흐름을 빠르게 이해할 수 있게 했어요.
-            </ListHeader.DescriptionParagraph>
-          }
-          right={
-            <ListHeader.RightText typography="t7">
-              {draft.previewPath}
-            </ListHeader.RightText>
           }
         />
 
@@ -83,9 +63,11 @@ export function TimelineScreen({ draft, onChangePhotos }: TimelineScreenProps) {
 
               <p className="timeline-summary">{moment.summary}</p>
 
-              <div className="timeline-meta">
-                <span>{formatMomentWindow(moment)}</span>
-              </div>
+              {moment.startedAt != null || moment.endedAt != null ? (
+                <div className="timeline-meta">
+                  <span>{formatMomentWindow(moment)}</span>
+                </div>
+              ) : null}
 
               <div className="timeline-preview-grid">
                 {moment.photos.slice(0, 4).map((photo, photoIndex) => (
@@ -100,18 +82,6 @@ export function TimelineScreen({ draft, onChangePhotos }: TimelineScreenProps) {
               </div>
             </article>
           ))}
-        </div>
-      </section>
-
-      <section className="surface-card">
-        <div className="timeline-next-step">
-          <h3>결과를 본 흐름 그대로 공개로 이어져요</h3>
-          <p>
-            방금 확인한 여정의 맥락이 남아 있을 때 다음 행동으로 넘어가게 하면 공개 결정이 더 자연스럽게 이어져요.
-          </p>
-          <p className="section-note">
-            이번 구현은 실제 공개나 외부 이동 없이, 공개 유도 화면과 전환 감각만 더미로 보여줘요.
-          </p>
         </div>
       </section>
     </>
