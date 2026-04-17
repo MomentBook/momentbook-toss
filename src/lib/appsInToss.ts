@@ -19,16 +19,26 @@ export interface AlbumPhoto {
 
 export { FetchAlbumPhotosPermissionError }
 
+type AlbumPhotoPermissionStatus =
+  | Awaited<ReturnType<typeof fetchAlbumPhotos.getPermission>>
+  | 'osPermissionDenied'
+
 export function getRuntimeEnvironment(): RuntimeEnvironment {
   return getEnvironment()
 }
 
 export async function fetchMomentbookAlbumPhotos(): Promise<AlbumPhoto[]> {
+  await ensureAlbumPhotoPermission()
+
   const photos = await fetchAlbumPhotos({
     base64: true,
     maxCount: 30,
     maxWidth: 1440,
   })
+
+  if (!Array.isArray(photos)) {
+    throw new Error('사진 목록 응답이 올바르지 않아요. 잠시 후 다시 시도해 주세요.')
+  }
 
   return photos.map((photo) => ({
     id: photo.id,
@@ -64,5 +74,23 @@ function getEnvironment(): RuntimeEnvironment {
     return getOperationalEnvironment()
   } catch {
     return 'browser'
+  }
+}
+
+async function ensureAlbumPhotoPermission() {
+  const permissionStatus = await fetchAlbumPhotos.getPermission() as AlbumPhotoPermissionStatus
+
+  if (permissionStatus === 'allowed') {
+    return
+  }
+
+  if (permissionStatus === 'osPermissionDenied') {
+    throw new Error('토스 앱의 사진 권한이 꺼져 있어요. 기기 설정에서 토스의 사진 접근을 허용한 뒤 다시 시도해 주세요.')
+  }
+
+  const resolvedPermission = await fetchAlbumPhotos.openPermissionDialog()
+
+  if (resolvedPermission !== 'allowed') {
+    throw new FetchAlbumPhotosPermissionError()
   }
 }
