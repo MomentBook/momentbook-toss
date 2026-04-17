@@ -1,13 +1,22 @@
-export const screens = ['discover', 'upload', 'organizing', 'timeline', 'publish'] as const
+export const screens = ['discover', 'featuredJourney', 'upload', 'organizing', 'timeline', 'publish'] as const
 
 export type Screen = (typeof screens)[number]
 
-type HistoryState = {
+export type HistoryState = {
   screen: Screen
+  featuredJourneyId?: string
 }
 
-export function buildHistoryState(screen: Screen): HistoryState {
-  return { screen }
+export function buildHistoryState(
+  screen: Screen,
+  options?: {
+    featuredJourneyId?: string
+  },
+): HistoryState {
+  return {
+    screen,
+    ...(options?.featuredJourneyId != null ? { featuredJourneyId: options.featuredJourneyId } : {}),
+  }
 }
 
 export function getRequestedScreen(hash: string, state: unknown): Screen | null {
@@ -23,8 +32,18 @@ export function toScreenHash(screen: Screen) {
   return `#${screen}`
 }
 
+export function getRequestedFeaturedJourneyId(state: unknown) {
+  return isHistoryState(state) ? state.featuredJourneyId ?? null : null
+}
+
 function isHistoryState(value: unknown): value is HistoryState {
-  return typeof value === 'object' && value != null && 'screen' in value && isScreen(value.screen)
+  return (
+    typeof value === 'object' &&
+    value != null &&
+    'screen' in value &&
+    isScreen(value.screen) &&
+    (!('featuredJourneyId' in value) || typeof value.featuredJourneyId === 'string')
+  )
 }
 
 function isScreen(value: unknown): value is Screen {
