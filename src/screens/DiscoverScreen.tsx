@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import useEmblaCarousel from 'embla-carousel-react'
 import { featuredJourneys } from '../lib/featuredJourneys'
 
 type DiscoverScreenProps = {
@@ -6,59 +7,35 @@ type DiscoverScreenProps = {
 }
 
 export function DiscoverScreen({ onOpenJourney }: DiscoverScreenProps) {
-  const trackRef = useRef<HTMLDivElement | null>(null)
-  const slideRefs = useRef<Array<HTMLButtonElement | null>>([])
   const [activeIndex, setActiveIndex] = useState(0)
+  const isLooping = featuredJourneys.length > 2
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: 'center',
+    containScroll: false,
+    loop: isLooping,
+  })
 
   useEffect(() => {
-    const track = trackRef.current
-    const slides = slideRefs.current.filter(
-      (slide): slide is HTMLButtonElement => slide != null,
-    )
-
-    if (track == null || slides.length === 0 || !('IntersectionObserver' in window)) {
+    if (emblaApi == null) {
       return
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visibleEntry = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0]
+    const syncActiveIndex = () => {
+      setActiveIndex(emblaApi.selectedScrollSnap())
+    }
 
-        if (visibleEntry == null) {
-          return
-        }
+    syncActiveIndex()
+    emblaApi.on('select', syncActiveIndex)
+    emblaApi.on('reInit', syncActiveIndex)
 
-        const nextIndex = slides.findIndex((slide) => slide === visibleEntry.target)
-
-        if (nextIndex >= 0) {
-          setActiveIndex(nextIndex)
-        }
-      },
-      {
-        root: track,
-        threshold: [0.6, 0.75, 0.9],
-      },
-    )
-
-    slides.forEach((slide) => observer.observe(slide))
-
-    return () => observer.disconnect()
-  }, [])
+    return () => {
+      emblaApi.off('select', syncActiveIndex)
+      emblaApi.off('reInit', syncActiveIndex)
+    }
+  }, [emblaApi])
 
   const handleSelectSlide = (index: number) => {
-    const slide = slideRefs.current[index]
-
-    if (slide == null) {
-      return
-    }
-
-    slide.scrollIntoView({
-      behavior: 'smooth',
-      block: 'nearest',
-      inline: 'start',
-    })
+    emblaApi?.scrollTo(index)
     setActiveIndex(index)
   }
 
@@ -70,44 +47,49 @@ export function DiscoverScreen({ onOpenJourney }: DiscoverScreenProps) {
         </div>
       </div>
 
-      <div
-        ref={trackRef}
-        aria-label="다른 사람의 여정 슬라이드"
-        className="discover-simple__list"
-      >
-        {featuredJourneys.map((journey, index) => (
-          <button
-            key={journey.id}
-            ref={(element) => {
-              slideRefs.current[index] = element
-            }}
-            className={`discover-simple__item${index === activeIndex ? ' discover-simple__item--active' : ''}`}
-            type="button"
-            onClick={() => onOpenJourney(journey.id)}
-          >
-            <div className="discover-simple__item-hero">
-              <span className="discover-simple__item-kicker">
-                여정 {String(index + 1).padStart(2, '0')}
-              </span>
+      <div className="discover-simple__carousel">
+        <div
+          ref={emblaRef}
+          aria-label="다른 사람의 여정 슬라이드"
+          className="discover-simple__viewport"
+        >
+          <div className="discover-simple__list">
+            {featuredJourneys.map((journey, index) => (
+              <div
+                key={journey.id}
+                className={`discover-simple__slide discover-simple__slide--${getSlideState(index, activeIndex, featuredJourneys.length, isLooping)}`}
+              >
+                <button
+                  className={`discover-simple__item${index === activeIndex ? ' discover-simple__item--active' : ''}`}
+                  type="button"
+                  onClick={() => onOpenJourney(journey.id)}
+                >
+                  <div className="discover-simple__item-hero">
+                    <span className="discover-simple__item-kicker">
+                      여정 {String(index + 1).padStart(2, '0')}
+                    </span>
 
-              <div className="discover-simple__item-copy">
-                <h3>{journey.title}</h3>
-                <p className="discover-simple__item-tone">{journey.tone}</p>
+                    <div className="discover-simple__item-copy">
+                      <h3>{journey.title}</h3>
+                      <p className="discover-simple__item-tone">{journey.tone}</p>
+                    </div>
+                  </div>
+
+                  <div className="discover-simple__item-body">
+                    <p className="discover-simple__item-summary">{journey.summary}</p>
+
+                    <div className="discover-simple__item-footer">
+                      <p className="discover-simple__item-meta">
+                        {journey.location} · {journey.duration}
+                      </p>
+                      <span className="discover-simple__item-action">자세히 보기</span>
+                    </div>
+                  </div>
+                </button>
               </div>
-            </div>
-
-            <div className="discover-simple__item-body">
-              <p className="discover-simple__item-summary">{journey.summary}</p>
-
-              <div className="discover-simple__item-footer">
-                <p className="discover-simple__item-meta">
-                  {journey.location} · {journey.duration}
-                </p>
-                <span className="discover-simple__item-action">자세히 보기</span>
-              </div>
-            </div>
-          </button>
-        ))}
+            ))}
+          </div>
+        </div>
       </div>
 
       <div aria-label="여정 페이지 선택" className="discover-simple__pagination">
@@ -124,4 +106,23 @@ export function DiscoverScreen({ onOpenJourney }: DiscoverScreenProps) {
       </div>
     </section>
   )
+}
+
+function getSlideState(index: number, activeIndex: number, total: number, isLooping: boolean) {
+  if (index === activeIndex || total <= 1) {
+    return 'active'
+  }
+
+  const previousIndex = isLooping ? (activeIndex - 1 + total) % total : activeIndex - 1
+  const nextIndex = isLooping ? (activeIndex + 1) % total : activeIndex + 1
+
+  if (index === previousIndex) {
+    return 'previous'
+  }
+
+  if (index === nextIndex) {
+    return 'next'
+  }
+
+  return 'rest'
 }
