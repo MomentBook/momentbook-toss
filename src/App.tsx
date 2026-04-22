@@ -47,15 +47,21 @@ import { TimelineScreen } from './screens/TimelineScreen'
 import { UploadScreen } from './screens/UploadScreen'
 
 type PublishStatus = 'idle' | 'publishing' | 'complete'
+type PhotoSelectionStatus = 'idle' | 'loading'
 
 type FlowState = {
   photos: PhotoAsset[]
   moments: JourneyMoment[]
   draft: JourneyDraft | null
   publishStatus: PublishStatus
+  photoSelectionStatus: PhotoSelectionStatus
+  photoSelectionErrorMessage: string | null
 }
 
 type FlowAction =
+  | { type: 'photoSelectionStarted' }
+  | { type: 'photoSelectionFinished' }
+  | { type: 'photoSelectionFailed'; message: string }
   | { type: 'photosSelected'; photos: PhotoAsset[] }
   | { type: 'draftCleared' }
   | { type: 'momentsUpdated'; moments: JourneyMoment[] }
@@ -127,6 +133,8 @@ const initialFlowState: FlowState = {
   moments: [],
   draft: null,
   publishStatus: 'idle',
+  photoSelectionStatus: 'idle',
+  photoSelectionErrorMessage: null,
 }
 
 function buildPhotosSelectedState(photos: PhotoAsset[]): FlowState {
@@ -142,6 +150,8 @@ function clearDraftState(state: FlowState): FlowState {
     ...state,
     draft: null,
     publishStatus: 'idle',
+    photoSelectionStatus: 'idle',
+    photoSelectionErrorMessage: null,
   }
 }
 
@@ -200,6 +210,23 @@ function resolveAccessibleScreen(
 
 function reducer(state: FlowState, action: FlowAction): FlowState {
   switch (action.type) {
+    case 'photoSelectionStarted':
+      return {
+        ...state,
+        photoSelectionStatus: 'loading',
+        photoSelectionErrorMessage: null,
+      }
+    case 'photoSelectionFinished':
+      return {
+        ...state,
+        photoSelectionStatus: 'idle',
+      }
+    case 'photoSelectionFailed':
+      return {
+        ...state,
+        photoSelectionStatus: 'idle',
+        photoSelectionErrorMessage: action.message,
+      }
     case 'photosSelected':
       return buildPhotosSelectedState(action.photos)
     case 'draftCleared':
@@ -368,16 +395,22 @@ function App() {
 
   const selectPhotos = useCallback(
     async (loader: () => Promise<PhotoAsset[]>) => {
+      dispatch({ type: 'photoSelectionStarted' })
+
       try {
         const photos = await loader()
 
         if (photos.length === 0) {
+          dispatch({ type: 'photoSelectionFinished' })
           return
         }
 
         completePhotoSelection(photos)
       } catch (error) {
-        toast.openToast(getPhotoSelectionMessage(error), {
+        const message = getPhotoSelectionMessage(error)
+
+        dispatch({ type: 'photoSelectionFailed', message })
+        toast.openToast(message, {
           higherThanCTA: true,
         })
       }
@@ -386,13 +419,17 @@ function App() {
   )
 
   const handlePickPhotos = useCallback(async () => {
+    if (flow.photoSelectionStatus === 'loading') {
+      return
+    }
+
     if (runtime === 'browser') {
       fileInputRef.current?.click()
       return
     }
 
     await selectPhotos(async () => normalizeTossAlbumPhotos(await fetchMomentbookAlbumPhotos()))
-  }, [runtime, selectPhotos])
+  }, [flow.photoSelectionStatus, runtime, selectPhotos])
 
   const handleBrowserSelection = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.currentTarget.files ?? [])
@@ -406,7 +443,7 @@ function App() {
   }
 
   const handleStartOrganizing = useCallback(() => {
-    if (flow.photos.length === 0) {
+    if (flow.photos.length === 0 || flow.photoSelectionStatus === 'loading') {
       return
     }
 
@@ -564,8 +601,10 @@ function App() {
     case 'upload':
       content = (
         <UploadScreen
+          isPickingPhotos={flow.photoSelectionStatus === 'loading'}
           pickLabel={copy.pickLabel}
           photos={flow.photos}
+          selectionErrorMessage={flow.photoSelectionErrorMessage}
           onPickPhotos={() => void handlePickPhotos()}
         />
       )
@@ -629,7 +668,11 @@ function App() {
       ) : null}
 
       {screen === 'upload' ? (
-        <FixedBottomCTA hideOnScroll disabled={flow.photos.length === 0} onClick={handleStartOrganizing}>
+        <FixedBottomCTA
+          hideOnScroll
+          disabled={flow.photos.length === 0 || flow.photoSelectionStatus === 'loading'}
+          onClick={handleStartOrganizing}
+        >
           모먼트 구성하기
         </FixedBottomCTA>
       ) : null}
