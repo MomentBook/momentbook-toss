@@ -11,9 +11,9 @@ export function DiscoverScreen({ onOpenJourney }: DiscoverScreenProps) {
       <section className="hero-card">
         <div className="hero-card__content">
           <span className="section-badge section-badge--primary">여정 둘러보기</span>
-          <h2 className="hero-card__title">다른 사람의 모먼트북으로 정리 흐름을 먼저 살펴보세요</h2>
+          <h2 className="hero-card__title">MomentBook 앱의 공개 여정 경험을 토스 안에서 먼저 둘러보세요</h2>
           <p className="hero-card__description">
-            사진이 어떤 장면 단위로 묶이는지 예시를 보고, 바로 내 여정을 시작할 수 있어요.
+            다른 사람의 완성된 여정을 보고, 내 사진으로는 비공개 초안을 만들어 볼 수 있어요.
           </p>
         </div>
       </section>
@@ -29,7 +29,7 @@ export function DiscoverScreen({ onOpenJourney }: DiscoverScreenProps) {
         <div className="feature-chips">
           <span className="feature-chip">대표 사진 미리보기</span>
           <span className="feature-chip">모먼트 개수 확인</span>
-          <span className="feature-chip">발행된 흐름 탐색</span>
+          <span className="feature-chip">공개 여정 흐름 탐색</span>
         </div>
       </section>
 
@@ -37,7 +37,7 @@ export function DiscoverScreen({ onOpenJourney }: DiscoverScreenProps) {
         <div className="section-heading">
           <div>
             <p className="section-heading__eyebrow">여정 목록</p>
-            <h3 id="discover-list-title">사진이 어떻게 읽히는지 예시로 둘러보세요</h3>
+            <h3 id="discover-list-title">네이티브 앱에서 공개될 여정의 형태를 예시로 둘러보세요</h3>
           </div>
         </div>
 

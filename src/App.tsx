@@ -13,7 +13,6 @@ import {
   getFeaturedJourneyById,
   getFeaturedJourneyMomentById,
 } from './lib/featuredJourneys'
-import { serverConfig } from './lib/environment'
 import {
   FetchAlbumPhotosPermissionError,
   fetchMomentbookAlbumPhotos,
@@ -31,11 +30,13 @@ import {
 } from './lib/navigation'
 import {
   buildJourneyDraft,
+  createDefaultJourneyDetails,
   createEmptyJourneyMoments,
   getUnassignedPhotos,
   readBrowserPhotoFiles,
   normalizeTossAlbumPhotos,
   type JourneyDraft,
+  type JourneyDetails,
   type JourneyMoment,
   type PhotoAsset,
 } from './lib/momentbook'
@@ -43,18 +44,19 @@ import { DiscoverScreen } from './screens/DiscoverScreen'
 import { FeaturedJourneyScreen } from './screens/FeaturedJourneyScreen'
 import { FeaturedTimelineDetailScreen } from './screens/FeaturedTimelineDetailScreen'
 import { OrganizingScreen } from './screens/OrganizingScreen'
-import { PublishScreen } from './screens/PublishScreen'
+import { PrivateDraftScreen } from './screens/PrivateDraftScreen'
 import { TimelineScreen } from './screens/TimelineScreen'
 import { UploadScreen } from './screens/UploadScreen'
 
-type PublishStatus = 'idle' | 'publishing' | 'complete'
+type PrivateDraftStatus = 'idle' | 'saving' | 'complete'
 type PhotoSelectionStatus = 'idle' | 'loading'
 
 type FlowState = {
   photos: PhotoAsset[]
+  details: JourneyDetails
   moments: JourneyMoment[]
   draft: JourneyDraft | null
-  publishStatus: PublishStatus
+  privateDraftStatus: PrivateDraftStatus
   photoSelectionStatus: PhotoSelectionStatus
   photoSelectionErrorMessage: string | null
 }
@@ -65,10 +67,11 @@ type FlowAction =
   | { type: 'photoSelectionFailed'; message: string }
   | { type: 'photosSelected'; photos: PhotoAsset[] }
   | { type: 'draftCleared' }
+  | { type: 'journeyDetailsUpdated'; details: JourneyDetails }
   | { type: 'momentsUpdated'; moments: JourneyMoment[] }
   | { type: 'draftGenerated'; draft: JourneyDraft }
-  | { type: 'publishStarted' }
-  | { type: 'publishCompleted' }
+  | { type: 'privateDraftSaveStarted' }
+  | { type: 'privateDraftSaveCompleted' }
   | { type: 'resetAll' }
 
 const runtimeCopy: Record<
@@ -116,24 +119,25 @@ const screenMeta: Record<
     description: '사진을 선택해요.',
   },
   organizing: {
-    label: '모먼트 구성',
-    description: '사진을 직접 고르며 여정의 흐름을 만들어 보세요.',
+    label: '비공개 여정 구성',
+    description: '사진과 문장을 직접 골라 여정의 흐름을 만들어 보세요.',
   },
   timeline: {
     label: '타임라인 확인',
-    description: '직접 구성한 여정을 미리 보고 공개 흐름을 다듬어요.',
+    description: '직접 구성한 비공개 여정 초안을 미리 봐요.',
   },
-  publish: {
-    label: '발행 준비',
-    description: '대표 이미지와 공개용 페이지 구성을 확인해요.',
+  privateDraft: {
+    label: '비공개 저장',
+    description: '토스 안에서는 공개 없이 초안만 완성해요.',
   },
 }
 
 const initialFlowState: FlowState = {
   photos: [],
+  details: createDefaultJourneyDetails([]),
   moments: [],
   draft: null,
-  publishStatus: 'idle',
+  privateDraftStatus: 'idle',
   photoSelectionStatus: 'idle',
   photoSelectionErrorMessage: null,
 }
@@ -142,6 +146,7 @@ function buildPhotosSelectedState(photos: PhotoAsset[]): FlowState {
   return {
     ...initialFlowState,
     photos,
+    details: createDefaultJourneyDetails(photos),
     moments: createEmptyJourneyMoments(),
   }
 }
@@ -150,7 +155,7 @@ function clearDraftState(state: FlowState): FlowState {
   return {
     ...state,
     draft: null,
-    publishStatus: 'idle',
+    privateDraftStatus: 'idle',
     photoSelectionStatus: 'idle',
     photoSelectionErrorMessage: null,
   }
@@ -198,7 +203,7 @@ function resolveAccessibleScreen(
     return state.photos.length > 0 ? requested : 'upload'
   }
 
-  if (requested === 'timeline' || requested === 'publish') {
+  if (requested === 'timeline' || requested === 'privateDraft') {
     if (state.draft != null) {
       return requested
     }
@@ -232,6 +237,11 @@ function reducer(state: FlowState, action: FlowAction): FlowState {
       return buildPhotosSelectedState(action.photos)
     case 'draftCleared':
       return clearDraftState(state)
+    case 'journeyDetailsUpdated':
+      return {
+        ...clearDraftState(state),
+        details: action.details,
+      }
     case 'momentsUpdated':
       return {
         ...clearDraftState(state),
@@ -239,15 +249,15 @@ function reducer(state: FlowState, action: FlowAction): FlowState {
       }
     case 'draftGenerated':
       return buildDraftGeneratedState(state, action.draft)
-    case 'publishStarted':
+    case 'privateDraftSaveStarted':
       return {
         ...state,
-        publishStatus: 'publishing',
+        privateDraftStatus: 'saving',
       }
-    case 'publishCompleted':
+    case 'privateDraftSaveCompleted':
       return {
         ...state,
-        publishStatus: 'complete',
+        privateDraftStatus: 'complete',
       }
     case 'resetAll':
       return initialFlowState
@@ -366,20 +376,20 @@ function App() {
   }, [flow])
 
   useEffect(() => {
-    if (flow.publishStatus !== 'publishing') {
+    if (flow.privateDraftStatus !== 'saving') {
       return
     }
 
     const timeoutId = window.setTimeout(() => {
       startTransition(() => {
-        dispatch({ type: 'publishCompleted' })
+        dispatch({ type: 'privateDraftSaveCompleted' })
       })
 
       void triggerSuccessHaptic()
     }, 900)
 
     return () => window.clearTimeout(timeoutId)
-  }, [flow.publishStatus])
+  }, [flow.privateDraftStatus])
 
   const completePhotoSelection = useCallback(
     (photos: PhotoAsset[]) => {
@@ -460,6 +470,12 @@ function App() {
     })
   }, [])
 
+  const handleJourneyDetailsUpdated = useCallback((details: JourneyDetails) => {
+    startTransition(() => {
+      dispatch({ type: 'journeyDetailsUpdated', details })
+    })
+  }, [])
+
   const handlePreviewTimeline = useCallback(() => {
     const hasGroupedMoment = flow.moments.some((moment) => moment.photos.length > 0)
 
@@ -473,9 +489,7 @@ function App() {
       return
     }
 
-    const draft = buildJourneyDraft(flow.photos, flow.moments, {
-      webBaseUrl: serverConfig.webBaseUrl,
-    })
+    const draft = buildJourneyDraft(flow.photos, flow.moments, flow.details)
     const nextFlow = buildDraftGeneratedState(flow, draft)
 
     startTransition(() => {
@@ -486,21 +500,21 @@ function App() {
     navigate('timeline', 'push', nextFlow)
   }, [flow, navigate])
 
-  const handleOpenPublish = useCallback(() => {
+  const handleOpenPrivateDraft = useCallback(() => {
     if (flow.draft == null) {
       return
     }
 
-    navigate('publish', 'push')
+    navigate('privateDraft', 'push')
   }, [flow.draft, navigate])
 
-  const handlePublish = useCallback(() => {
-    if (flow.draft == null || flow.publishStatus !== 'idle') {
+  const handleSavePrivateDraft = useCallback(() => {
+    if (flow.draft == null || flow.privateDraftStatus !== 'idle') {
       return
     }
 
-    dispatch({ type: 'publishStarted' })
-  }, [flow.draft, flow.publishStatus])
+    dispatch({ type: 'privateDraftSaveStarted' })
+  }, [flow.draft, flow.privateDraftStatus])
 
   const handleRestart = useCallback(() => {
     dispatch({ type: 'resetAll' })
@@ -615,8 +629,10 @@ function App() {
     case 'organizing':
       content = (
         <OrganizingScreen
+          details={flow.details}
           moments={flow.moments}
           photos={flow.photos}
+          onChangeDetails={handleJourneyDetailsUpdated}
           onChangeMoments={handleMomentsUpdated}
         />
       )
@@ -631,12 +647,12 @@ function App() {
           />
         )
       break
-    case 'publish':
+    case 'privateDraft':
       content =
         currentDraft == null ? null : (
-          <PublishScreen
+          <PrivateDraftScreen
             draft={currentDraft}
-            publishStatus={flow.publishStatus}
+            saveStatus={flow.privateDraftStatus}
             onBackToTimeline={() => navigate('timeline', 'replace')}
           />
         )
@@ -666,7 +682,7 @@ function App() {
 
       {screen === 'discover' ? (
         <FixedBottomCTA hideOnScroll onClick={() => navigate('upload', 'push')}>
-          {flow.photos.length > 0 ? '선택한 사진 이어서 정리하기' : '내 여정 추가하기'}
+          {flow.photos.length > 0 ? '비공개 여정 이어서 만들기' : '내 비공개 여정 만들기'}
         </FixedBottomCTA>
       ) : null}
 
@@ -676,7 +692,7 @@ function App() {
           disabled={flow.photos.length === 0 || flow.photoSelectionStatus === 'loading'}
           onClick={handleStartOrganizing}
         >
-          모먼트 구성하기
+          비공개 여정 구성하기
         </FixedBottomCTA>
       ) : null}
 
@@ -691,24 +707,24 @@ function App() {
       ) : null}
 
       {screen === 'timeline' ? (
-        <FixedBottomCTA hideOnScroll disabled={currentDraft == null} onClick={handleOpenPublish}>
-          이 여정 게시하기
+        <FixedBottomCTA hideOnScroll disabled={currentDraft == null} onClick={handleOpenPrivateDraft}>
+          비공개 여정 저장하기
         </FixedBottomCTA>
       ) : null}
 
-      {screen === 'publish' ? (
-        flow.publishStatus === 'complete' ? (
+      {screen === 'privateDraft' ? (
+        flow.privateDraftStatus === 'complete' ? (
           <FixedBottomCTA hideOnScroll onClick={handleRestart}>
             새 여정 만들기
           </FixedBottomCTA>
         ) : (
           <FixedBottomCTA
             hideOnScroll
-            disabled={currentDraft == null || flow.publishStatus === 'publishing'}
-            loading={flow.publishStatus === 'publishing'}
-            onClick={handlePublish}
+            disabled={currentDraft == null || flow.privateDraftStatus === 'saving'}
+            loading={flow.privateDraftStatus === 'saving'}
+            onClick={handleSavePrivateDraft}
           >
-            모먼트북 페이지 만들기
+            비공개 초안 완료하기
           </FixedBottomCTA>
         )
       ) : null}

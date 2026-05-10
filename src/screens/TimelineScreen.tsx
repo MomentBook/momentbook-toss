@@ -21,20 +21,20 @@ export function TimelineScreen({ draft, onChangePhotos, onEditMoments }: Timelin
             <div className="timeline-hero__overlay" />
 
             <div className="timeline-hero__content">
-              <span className="section-badge section-badge--glass">직접 구성 완료</span>
+              <span className="section-badge section-badge--glass">비공개 초안 미리보기</span>
               <h2>{draft.title}</h2>
               <p>{draft.subtitle}</p>
 
               <div className="timeline-hero__chips">
                 <span className="timeline-hero__chip">{formatCount(photoCount, '장')}</span>
                 <span className="timeline-hero__chip">{formatCount(draft.timeline.length, '개 모먼트')}</span>
-                <span className="timeline-hero__chip">공개 페이지 미리보기</span>
+                <span className="timeline-hero__chip">비공개</span>
               </div>
             </div>
           </div>
         ) : (
           <div className="hero-card__content">
-            <span className="section-badge section-badge--primary">직접 구성 완료</span>
+            <span className="section-badge section-badge--primary">비공개 초안 미리보기</span>
             <h2 className="hero-card__title">{draft.title}</h2>
             <p className="hero-card__description">{draft.subtitle}</p>
           </div>
@@ -45,7 +45,7 @@ export function TimelineScreen({ draft, onChangePhotos, onEditMoments }: Timelin
         <div className="section-heading">
           <div>
             <p className="section-heading__eyebrow">구성한 타임라인</p>
-            <h3>이 순서대로 공개 페이지에 담겨요</h3>
+            <h3>이 순서대로 비공개 여정 초안에 담겨요</h3>
           </div>
         </div>
 
@@ -83,13 +83,13 @@ export function TimelineScreen({ draft, onChangePhotos, onEditMoments }: Timelin
         <div className="section-heading section-heading--compact">
           <div>
             <p className="section-heading__eyebrow">흐름을 바꾸고 싶다면</p>
-            <h3>모먼트를 다시 묶거나 사진을 새로 골라 여정을 바꿀 수 있어요</h3>
+            <h3>여정 정보, 모먼트, 사진을 다시 다듬을 수 있어요</h3>
           </div>
         </div>
 
         <div className="timeline-actions">
           <Button display="full" size="large" variant="weak" onClick={onEditMoments}>
-            모먼트 다시 묶기
+            여정과 모먼트 수정하기
           </Button>
 
           <button className="timeline-text-action" type="button" onClick={onChangePhotos}>

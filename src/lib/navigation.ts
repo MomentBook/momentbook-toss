@@ -5,7 +5,7 @@ export const screens = [
   'upload',
   'organizing',
   'timeline',
-  'publish',
+  'privateDraft',
 ] as const
 
 export type Screen = (typeof screens)[number]

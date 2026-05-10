@@ -1,6 +1,6 @@
 # ADR 0004: v1 단계에서는 초안 생성과 publish를 로컬 휴리스틱/시뮬레이션으로 유지한다
 
-- Status: Accepted
+- Status: Superseded by [0006](0006-keep-toss-v1-private-and-manual.md)
 - Date: 2026-04-18
 
 ## Context

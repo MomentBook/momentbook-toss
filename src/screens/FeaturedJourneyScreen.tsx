@@ -56,7 +56,7 @@ export function FeaturedJourneyScreen({
         <div className="section-heading section-heading--compact">
           <div>
             <p className="section-heading__eyebrow">타임라인</p>
-            <h3>장면별로 여정의 흐름을 이어 볼 수 있어요</h3>
+            <h3>MomentBook 앱에서는 완성된 여정이 이렇게 공개돼요</h3>
           </div>
         </div>
 

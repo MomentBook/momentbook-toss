@@ -1,17 +1,21 @@
-import { Button } from '@toss/tds-mobile'
-import { useRef, useState, type PointerEvent } from 'react'
+import { Button, TextArea, TextField } from '@toss/tds-mobile'
+import { useRef, useState, type ChangeEvent, type PointerEvent } from 'react'
 import {
   assignPhotosToJourneyMoment,
   formatCount,
   getUnassignedPhotos,
   removePhotoFromJourneyMoment,
+  updateJourneyMomentDetails,
+  type JourneyDetails,
   type JourneyMoment,
   type PhotoAsset,
 } from '../lib/momentbook'
 
 type OrganizingScreenProps = {
+  details: JourneyDetails
   photos: PhotoAsset[]
   moments: JourneyMoment[]
+  onChangeDetails: (details: JourneyDetails) => void
   onChangeMoments: (moments: JourneyMoment[]) => void
 }
 
@@ -22,8 +26,10 @@ type DragState = {
 }
 
 export function OrganizingScreen({
+  details,
   photos,
   moments,
+  onChangeDetails,
   onChangeMoments,
 }: OrganizingScreenProps) {
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([])
@@ -38,6 +44,27 @@ export function OrganizingScreen({
     : moments[0]?.id ?? ''
   const activeMoment = moments.find((moment) => moment.id === resolvedActiveMomentId) ?? moments[0] ?? null
   const selectedCount = selectedPhotoIdsInTray.length
+
+  const handleJourneyTitleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onChangeDetails({
+      ...details,
+      title: event.currentTarget.value,
+    })
+  }
+
+  const handleJourneyDescriptionChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    onChangeDetails({
+      ...details,
+      description: event.currentTarget.value,
+    })
+  }
+
+  const handleCoverPhotoChange = (coverPhotoId: string) => {
+    onChangeDetails({
+      ...details,
+      coverPhotoId,
+    })
+  }
 
   const handleTogglePhoto = (photoId: string) => {
     setSelectedPhotoIds((current) =>
@@ -59,6 +86,14 @@ export function OrganizingScreen({
 
   const handleRemovePhoto = (momentId: string, photoId: string) => {
     onChangeMoments(removePhotoFromJourneyMoment(moments, momentId, photoId))
+  }
+
+  const handleMomentTitleChange = (momentId: string, title: string) => {
+    onChangeMoments(updateJourneyMomentDetails(moments, momentId, { title }))
+  }
+
+  const handleMomentSummaryChange = (momentId: string, summary: string) => {
+    onChangeMoments(updateJourneyMomentDetails(moments, momentId, { summary }))
   }
 
   const resolveDropMomentId = (x: number, y: number) => {
@@ -127,11 +162,11 @@ export function OrganizingScreen({
     <>
       <section className="hero-card">
         <div className="hero-card__content">
-          <span className="section-badge section-badge--primary">직접 구성</span>
-          <h2 className="hero-card__title">사진을 순간 단위로 나눠 담아보세요.</h2>
+          <span className="section-badge section-badge--primary">비공개 구성</span>
+          <h2 className="hero-card__title">사진과 문장을 직접 골라 여정 초안을 만들어요.</h2>
           <p className="hero-card__description">
-            촬영 시각 없이도 익숙하게 정리할 수 있도록, 원하는 사진을 여러 장 선택한 뒤 순간 버킷으로
-            끌어 놓거나 버튼으로 담을 수 있게 준비했어요.
+            앱인토스에서는 촬영 위치나 EXIF를 해석하지 않고, 내가 고른 사진과 메모만으로 모먼트를
+            구성해요. 공개는 나중에 MomentBook 앱에서 이어갈 수 있도록 비공개 흐름으로 유지해요.
           </p>
 
           <div className="organizing-guide-grid">
@@ -159,6 +194,58 @@ export function OrganizingScreen({
               </div>
             </article>
           </div>
+        </div>
+      </section>
+
+      <section className="panel-card">
+        <div className="section-heading">
+          <div>
+            <p className="section-heading__eyebrow">여정 정보</p>
+            <h3>네이티브 앱처럼 제목, 설명, 대표 사진을 먼저 잡아요</h3>
+          </div>
+        </div>
+
+        <div className="journey-editor-form">
+          <TextField
+            label="여정 제목"
+            labelOption="sustain"
+            maxLength={60}
+            placeholder="예: 제주에서 천천히 걸은 주말"
+            value={details.title}
+            variant="box"
+            onChange={handleJourneyTitleChange}
+          />
+
+          <TextArea
+            label="여정 설명"
+            labelOption="sustain"
+            maxLength={180}
+            minHeight={96}
+            placeholder="이 여정에서 기억하고 싶은 분위기를 짧게 적어주세요."
+            value={details.description}
+            variant="box"
+            onChange={handleJourneyDescriptionChange}
+          />
+        </div>
+
+        <div className="cover-picker" aria-label="대표 사진 선택">
+          {photos.slice(0, 8).map((photo, index) => {
+            const isSelected = details.coverPhotoId === photo.id
+
+            return (
+              <button
+                key={photo.id}
+                aria-label={`대표 사진 ${index + 1} 선택`}
+                aria-pressed={isSelected}
+                className={`cover-picker__item${isSelected ? ' cover-picker__item--selected' : ''}`}
+                type="button"
+                onClick={() => handleCoverPhotoChange(photo.id)}
+              >
+                <img alt="" loading="lazy" src={photo.previewUrl} />
+                <span>{isSelected ? '대표' : String(index + 1)}</span>
+              </button>
+            )
+          })}
         </div>
       </section>
 
@@ -229,8 +316,31 @@ export function OrganizingScreen({
             </div>
 
             <p className="helper-copy">
-              잘못 담은 사진은 여기서 빼고, 아래 남은 사진에서 다시 골라 같은 순간에 이어 담을 수 있어요.
+              모먼트 제목과 메모는 내가 직접 적어요. 잘못 담은 사진은 여기서 빼고 다시 고를 수 있어요.
             </p>
+
+            <div className="moment-editor-form">
+              <TextField
+                label="모먼트 제목"
+                labelOption="sustain"
+                maxLength={48}
+                placeholder="예: 바다가 처음 보이던 길"
+                value={activeMoment.title}
+                variant="box"
+                onChange={(event) => handleMomentTitleChange(activeMoment.id, event.currentTarget.value)}
+              />
+
+              <TextArea
+                label="모먼트 메모"
+                labelOption="sustain"
+                maxLength={160}
+                minHeight={88}
+                placeholder="이 장면을 설명할 한두 문장을 적어주세요."
+                value={activeMoment.summary}
+                variant="box"
+                onChange={(event) => handleMomentSummaryChange(activeMoment.id, event.currentTarget.value)}
+              />
+            </div>
 
             {activeMoment.photos.length > 0 ? (
               <div className="moment-photo-grid" aria-label={`${activeMoment.title}에 담긴 사진`}>

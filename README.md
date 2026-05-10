@@ -1,6 +1,7 @@
 # Momentbook for Apps in Toss
 
-This project adapts a Vite + React app into an Apps in Toss WebView mini app.
+This project adapts a Vite + React app into an Apps in Toss WebView marketing
+mini app for MomentBook.
 
 ## Commands
 
@@ -23,7 +24,8 @@ This project adapts a Vite + React app into an Apps in Toss WebView mini app.
 - `granite.config.ts`: Apps in Toss app contract
 - `src/lib/environment.ts`: client-visible environment/server URL validation
 - `src/lib/appsInToss.ts`: bridge access wrapper for browser, sandbox, and Toss runtime
-- `src/App.tsx`: mobile-oriented runtime dashboard UI
+- `src/lib/momentbook.ts`: private draft, photo, and manual moment helpers
+- `src/App.tsx`: mobile-oriented Apps in Toss flow orchestration
 
 ## Notes
 
@@ -31,3 +33,4 @@ This project adapts a Vite + React app into an Apps in Toss WebView mini app.
 - The project uses `@apps-in-toss/web-framework` with Yarn Modern through Corepack.
 - Yarn is configured with `nodeLinker: node-modules` to keep the runtime close to the existing Vite/Granite setup and the sibling MomentBook project.
 - TDS Mobile packages are installed and should remain the first choice for mobile UI changes.
+- The current Toss flow creates private journey drafts only. Server publish, Toss login token exchange, and native-account linking are intentionally out of scope for this repo stage.

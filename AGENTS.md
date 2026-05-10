@@ -15,14 +15,15 @@
 - 기술 스택은 Vite, React 18, TypeScript, `@apps-in-toss/web-framework`, `@toss/tds-mobile`입니다.
 - 앱 오케스트레이션은 `src/App.tsx`에 모여 있습니다.
 - Toss 런타임 연동은 `src/lib/appsInToss.ts`에 모여 있습니다.
-- 로컬 초안 생성 로직은 `src/lib/momentbook.ts`에 있습니다.
+- 비공개 초안/수동 모먼트 구성 로직은 `src/lib/momentbook.ts`에 있습니다.
 - 화면 컴포넌트는 `src/screens/*`에 있습니다.
 
 ## 작업 원칙
 
 - `AGENTS.md`는 짧게 유지합니다. 긴 설명은 `docs/`로 옮깁니다.
 - 현재 앱은 `browser`, `sandbox`, `toss` 세 실행 컨텍스트를 모두 고려합니다.
-- 현재 publish 단계는 실제 게시가 아니라 로컬 시뮬레이션 프리뷰입니다.
+- 현재 완료 단계는 실제 게시가 아니라 비공개 초안 완료 시뮬레이션입니다.
+- 서버 publish, 토스 로그인 토큰 교환, 네이티브 계정 연결은 현재 범위 밖입니다.
 - 비자명한 변경을 하기 전에 `docs/PRODUCT.md`와 관련 ADR을 확인합니다.
 - Apps in Toss SDK, Granite 설정, TDS 컴포넌트 동작은 추측하지 말고 공식 문서로 확인합니다.
 - `granite.config.ts`의 `appName`은 Toss 콘솔의 앱 ID와 정확히 일치해야 합니다. 현재 워크트리 값은 `MomentBook`이므로 대소문자를 임의로 바꾸지 마세요.

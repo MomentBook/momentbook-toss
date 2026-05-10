@@ -24,6 +24,12 @@ export type JourneyMoment = {
   photos: PhotoAsset[]
 }
 
+export type JourneyDetails = {
+  title: string
+  description: string
+  coverPhotoId: string | null
+}
+
 export type JourneyDraft = {
   id: string
   title: string
@@ -31,6 +37,7 @@ export type JourneyDraft = {
   slug: string
   previewPath: string
   previewUrl: string
+  visibility: 'private'
   coverPhoto: PhotoAsset | null
   timeline: JourneyMoment[]
 }
@@ -79,11 +86,19 @@ export function createEmptyJourneyMoments(): JourneyMoment[] {
   return momentTitles.map((title, index) => ({
     id: `moment-${index + 1}`,
     title,
-    summary: '아직 사진을 담지 않았어요.',
+    summary: '',
     startedAt: null,
     endedAt: null,
     photos: [],
   }))
+}
+
+export function createDefaultJourneyDetails(photos: PhotoAsset[]): JourneyDetails {
+  return {
+    title: '',
+    description: '',
+    coverPhotoId: photos[0]?.id ?? null,
+  }
 }
 
 export function assignPhotosToJourneyMoment(
@@ -131,6 +146,22 @@ export function removePhotoFromJourneyMoment(
   )
 }
 
+export function updateJourneyMomentDetails(
+  moments: JourneyMoment[],
+  momentId: string,
+  details: Partial<Pick<JourneyMoment, 'title' | 'summary'>>,
+) {
+  return moments.map((moment) =>
+    moment.id === momentId
+      ? {
+          ...moment,
+          ...(details.title != null ? { title: details.title } : {}),
+          ...(details.summary != null ? { summary: details.summary } : {}),
+        }
+      : moment,
+  )
+}
+
 export function getUnassignedPhotos(photos: PhotoAsset[], moments: JourneyMoment[]) {
   const assignedPhotoIds = new Set(
     moments.flatMap((moment) => moment.photos.map((photo) => photo.id)),
@@ -142,35 +173,41 @@ export function getUnassignedPhotos(photos: PhotoAsset[], moments: JourneyMoment
 export function buildJourneyDraft(
   photos: PhotoAsset[],
   moments: JourneyMoment[],
+  details: JourneyDetails,
   options: BuildJourneyDraftOptions = {},
 ): JourneyDraft {
+  const normalizedTitle = details.title.trim()
+  const normalizedDescription = details.description.trim()
   const timeline = moments
     .filter((moment) => moment.photos.length > 0)
     .map((moment, index, filteredMoments) => ({
       ...moment,
       id: `moment-${index + 1}`,
-      title: momentTitles[index] ?? `순간 ${index + 1}`,
-      summary: buildMomentSummary(moment.photos.length, index, filteredMoments.length),
+      title: moment.title.trim() || momentTitles[index] || `순간 ${index + 1}`,
+      summary:
+        moment.summary.trim() ||
+        buildMomentSummary(moment.photos.length, index, filteredMoments.length),
       startedAt: null,
       endedAt: null,
     }))
   const slug = buildJourneySlug(photos)
-  const previewPath = `/journeys/${slug}`
+  const previewPath = `/private/journeys/${slug}`
+  const coverPhoto =
+    photos.find((photo) => photo.id === details.coverPhotoId) ?? timeline[0]?.photos[0] ?? photos[0] ?? null
 
   return {
     id: `journey-${slug}`,
-    title:
-      photos.length === 0
-        ? '비어 있는 여정'
-        : `${photos.length}장의 사진으로 만든 여정`,
+    title: normalizedTitle || (photos.length === 0 ? '비어 있는 여정' : '비공개 여정 초안'),
     subtitle:
-      timeline.length === 0
+      normalizedDescription ||
+      (timeline.length === 0
         ? '사진을 순간에 담아 여정의 흐름을 만들어 보세요.'
-        : `${photos.length}장의 사진을 ${timeline.length}개의 순간으로 나눴어요.`,
+        : `${photos.length}장의 사진을 ${timeline.length}개의 모먼트로 직접 구성했어요.`),
     slug,
     previewPath,
     previewUrl: buildPreviewUrl(previewPath, options.webBaseUrl),
-    coverPhoto: timeline[0]?.photos[0] ?? photos[0] ?? null,
+    visibility: 'private',
+    coverPhoto,
     timeline,
   }
 }
