@@ -10,38 +10,21 @@ export function DiscoverScreen({ onOpenJourney }: DiscoverScreenProps) {
     <div className="discover-screen">
       <section className="hero-card">
         <div className="hero-card__content">
-          <span className="section-badge section-badge--primary">여정 둘러보기</span>
-          <h2 className="hero-card__title">MomentBook 앱의 공개 여정 경험을 토스 안에서 먼저 둘러보세요</h2>
-          <p className="hero-card__description">
-            다른 사람의 완성된 여정을 보고, 내 사진으로는 비공개 초안을 만들어 볼 수 있어요.
-          </p>
-        </div>
-      </section>
-
-      <section className="panel-card panel-card--muted">
-        <div className="section-heading section-heading--compact">
-          <div>
-            <p className="section-heading__eyebrow">둘러보기 포인트</p>
-            <h3>대표 장면과 흐름을 빠르게 확인할 수 있게 정리했어요</h3>
-          </div>
-        </div>
-
-        <div className="feature-chips">
-          <span className="feature-chip">대표 사진 미리보기</span>
-          <span className="feature-chip">모먼트 개수 확인</span>
-          <span className="feature-chip">공개 여정 흐름 탐색</span>
+          <p className="section-heading__eyebrow">MomentBook</p>
+          <h2 className="hero-card__title">당신의 순간을 기억하세요</h2>
+          <p className="hero-card__description">사진이 모먼트로 정리되면 여행의 흐름이 다시 보입니다.</p>
         </div>
       </section>
 
       <section aria-labelledby="discover-list-title" className="discover-screen__section">
         <div className="section-heading">
           <div>
-            <p className="section-heading__eyebrow">여정 목록</p>
-            <h3 id="discover-list-title">네이티브 앱에서 공개될 여정의 형태를 예시로 둘러보세요</h3>
+            <p className="section-heading__eyebrow">공개 여정</p>
+            <h3 id="discover-list-title">여정 예시</h3>
           </div>
         </div>
 
-        <div className="discover-journey-list">
+        <div className="discover-journey-list" aria-label="여정 예시 carousel">
           {featuredJourneys.map((journey, index) => (
             <article key={journey.id}>
               <button
@@ -72,13 +55,6 @@ export function DiscoverScreen({ onOpenJourney }: DiscoverScreenProps) {
                     <span className="feature-chip">
                       {formatCount(journey.moments.length, '개 모먼트')}
                     </span>
-                  </div>
-
-                  <p className="discover-journey-card__tone">{journey.tone}</p>
-
-                  <div className="discover-journey-card__footer">
-                    <span className="discover-journey-card__published">작성일 {journey.publishedAt}</span>
-                    <span className="discover-journey-card__action">자세히 보기</span>
                   </div>
                 </div>
               </button>

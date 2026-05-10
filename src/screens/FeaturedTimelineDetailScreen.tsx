@@ -31,9 +31,7 @@ export function FeaturedTimelineDetailScreen({
           <span aria-hidden="true">&lt;</span>
         </button>
 
-        <span className="app-pill">
-          Timeline {String(momentIndex + 1).padStart(2, '0')}
-        </span>
+        <span className="app-pill">Moment {String(momentIndex + 1).padStart(2, '0')}</span>
       </div>
 
       <section className="panel-card featured-timeline-detail__intro">
@@ -59,9 +57,7 @@ export function FeaturedTimelineDetailScreen({
       ) : null}
 
       <section className="panel-card featured-timeline-detail__note">
-        <span className="featured-timeline-detail__quote" aria-hidden="true">
-          "
-        </span>
+        <p className="section-heading__eyebrow">메모</p>
         <p>{moment.note}</p>
       </section>
     </div>

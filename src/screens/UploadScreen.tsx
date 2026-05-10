@@ -34,18 +34,18 @@ export function UploadScreen({
           <span className="section-badge section-badge--primary">
             {hasPhotos ? '사진 확인' : '사진 선택'}
           </span>
-          <h2 id="upload-panel-title">비공개 여정에 담을 사진만 골라주세요</h2>
+          <h2 id="upload-panel-title">여정에 담을 사진을 선택하세요</h2>
           <p>
             {hasPhotos
-              ? '앱인토스에서는 촬영 정보 대신 선택한 사진 순서와 사용자의 메모로 모먼트를 구성해요.'
-              : '이번 여정을 설명할 사진을 고른 뒤, 다음 단계에서 직접 모먼트를 만들 수 있어요.'}
+              ? '선택한 사진으로 모먼트를 나누고 필요한 메모만 남길 수 있어요.'
+              : '여행 사진을 한 번에 고르고 다음 단계에서 모먼트를 정리해요.'}
           </p>
         </div>
 
         {shouldShowFullLoadingState ? (
           <div aria-live="polite" className="upload-state upload-state--loading" role="status">
             <Loader label="사진을 불러오는 중이에요." size="large" />
-            <p className="upload-state__note">선택이 끝나면 비공개 구성 단계로 이어갈 수 있어요.</p>
+            <p className="upload-state__note">선택이 끝나면 바로 정리할 수 있어요.</p>
           </div>
         ) : shouldShowFullErrorState ? (
           <div className="upload-state upload-state--error" role="alert">
@@ -83,7 +83,7 @@ export function UploadScreen({
               {sourceLabel != null ? <span className="feature-chip">{sourceLabel}</span> : null}
             </div>
 
-            <p className="helper-copy">지금은 서버 업로드 없이, 모먼트 구성을 위한 미리보기만 준비해요.</p>
+            <p className="helper-copy">사진은 공개하지 않고 미리보기로만 사용해요.</p>
 
             {isPickingPhotos ? (
               <div aria-live="polite" className="upload-feedback upload-feedback--loading" role="status">
@@ -125,8 +125,8 @@ export function UploadScreen({
               +
             </span>
             <div className="upload-state__copy">
-              <h3>아직 고른 사진이 없어요</h3>
-              <p>선택한 뒤에 제목, 설명, 모먼트를 직접 정리할 수 있어요.</p>
+              <h3>사진을 선택하세요</h3>
+              <p>제목, 대표 사진, 모먼트는 다음 단계에서 정리해요.</p>
             </div>
             <Button display="full" size="large" onClick={onPickPhotos}>
               {pickLabel}

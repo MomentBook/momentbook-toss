@@ -44,8 +44,8 @@ export function TimelineScreen({ draft, onChangePhotos, onEditMoments }: Timelin
       <section className="panel-card">
         <div className="section-heading">
           <div>
-            <p className="section-heading__eyebrow">구성한 타임라인</p>
-            <h3>이 순서대로 비공개 여정 초안에 담겨요</h3>
+            <p className="section-heading__eyebrow">타임라인</p>
+            <h3>이 흐름으로 저장돼요</h3>
           </div>
         </div>
 
@@ -82,8 +82,8 @@ export function TimelineScreen({ draft, onChangePhotos, onEditMoments }: Timelin
       <section className="panel-card panel-card--muted">
         <div className="section-heading section-heading--compact">
           <div>
-            <p className="section-heading__eyebrow">흐름을 바꾸고 싶다면</p>
-            <h3>여정 정보, 모먼트, 사진을 다시 다듬을 수 있어요</h3>
+            <p className="section-heading__eyebrow">수정</p>
+            <h3>필요한 만큼만 다듬기</h3>
           </div>
         </div>
 

@@ -46,7 +46,7 @@ type BuildJourneyDraftOptions = {
   webBaseUrl?: string
 }
 
-const momentTitles = ['순간 1', '순간 2', '순간 3', '순간 4']
+const momentTitles = ['모먼트 1', '모먼트 2', '모먼트 3', '모먼트 4']
 
 export async function readBrowserPhotoFiles(files: File[]): Promise<PhotoAsset[]> {
   return await Promise.all(
@@ -183,7 +183,7 @@ export function buildJourneyDraft(
     .map((moment, index, filteredMoments) => ({
       ...moment,
       id: `moment-${index + 1}`,
-      title: moment.title.trim() || momentTitles[index] || `순간 ${index + 1}`,
+      title: moment.title.trim() || momentTitles[index] || `모먼트 ${index + 1}`,
       summary:
         moment.summary.trim() ||
         buildMomentSummary(moment.photos.length, index, filteredMoments.length),
@@ -201,8 +201,8 @@ export function buildJourneyDraft(
     subtitle:
       normalizedDescription ||
       (timeline.length === 0
-        ? '사진을 순간에 담아 여정의 흐름을 만들어 보세요.'
-        : `${photos.length}장의 사진을 ${timeline.length}개의 모먼트로 직접 구성했어요.`),
+        ? '사진을 모먼트에 담아 여정의 흐름을 만들어 보세요.'
+        : `${photos.length}장의 사진을 ${timeline.length}개의 모먼트로 정리했어요.`),
     slug,
     previewPath,
     previewUrl: buildPreviewUrl(previewPath, options.webBaseUrl),
@@ -237,7 +237,7 @@ export function formatPhotoRange(photos: PhotoAsset[]) {
 
 export function formatMomentWindow(moment: JourneyMoment) {
   if (moment.startedAt == null || moment.endedAt == null) {
-    return `${moment.photos.length}장의 사진을 한 흐름으로 묶었어요.`
+    return `${moment.photos.length}장의 사진을 한 모먼트로 묶었어요.`
   }
 
   const start = new Date(moment.startedAt)
@@ -301,18 +301,18 @@ function buildPreviewUrl(previewPath: string, webBaseUrl: string | undefined) {
 
 function buildMomentSummary(photoCount: number, index: number, totalMomentCount: number) {
   if (totalMomentCount === 1) {
-    return `${photoCount}장의 사진을 한 장면으로 정리했어요.`
+    return `${photoCount}장의 사진을 한 모먼트로 정리했어요.`
   }
 
   if (index === 0) {
-    return `${photoCount}장의 사진으로 여정의 시작 장면을 만들었어요.`
+    return `${photoCount}장의 사진으로 여정의 시작을 만들었어요.`
   }
 
   if (index === totalMomentCount - 1) {
-    return `${photoCount}장의 사진으로 마무리 장면을 구성했어요.`
+    return `${photoCount}장의 사진으로 마무리를 구성했어요.`
   }
 
-  return `${photoCount}장의 사진이 자연스럽게 이어지도록 한 순간으로 담았어요.`
+  return `${photoCount}장의 사진이 이어지도록 한 모먼트로 담았어요.`
 }
 
 function formatShortDate(date: Date) {

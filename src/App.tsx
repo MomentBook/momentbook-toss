@@ -667,7 +667,7 @@ function App() {
         {shouldShowChrome ? (
           <header className="app-chrome">
             <div>
-              <p className="app-chrome__eyebrow">Momentbook</p>
+              <p className="app-chrome__eyebrow">MomentBook</p>
               <h1 className="app-chrome__title">{screenMeta[screen].label}</h1>
             </div>
 
@@ -682,7 +682,7 @@ function App() {
 
       {screen === 'discover' ? (
         <FixedBottomCTA hideOnScroll onClick={() => navigate('upload', 'push')}>
-          {flow.photos.length > 0 ? '비공개 여정 이어서 만들기' : '내 비공개 여정 만들기'}
+          {flow.photos.length > 0 ? '내 여정 이어서 만들기' : '내 여정 만들기'}
         </FixedBottomCTA>
       ) : null}
 
@@ -692,7 +692,7 @@ function App() {
           disabled={flow.photos.length === 0 || flow.photoSelectionStatus === 'loading'}
           onClick={handleStartOrganizing}
         >
-          비공개 여정 구성하기
+          여정 정리하기
         </FixedBottomCTA>
       ) : null}
 
@@ -702,13 +702,13 @@ function App() {
           disabled={!hasGroupedMoment || unassignedPhotoCount > 0}
           onClick={handlePreviewTimeline}
         >
-          타임라인 미리보기
+          타임라인 보기
         </FixedBottomCTA>
       ) : null}
 
       {screen === 'timeline' ? (
         <FixedBottomCTA hideOnScroll disabled={currentDraft == null} onClick={handleOpenPrivateDraft}>
-          비공개 여정 저장하기
+          비공개로 저장하기
         </FixedBottomCTA>
       ) : null}
 
@@ -724,7 +724,7 @@ function App() {
             loading={flow.privateDraftStatus === 'saving'}
             onClick={handleSavePrivateDraft}
           >
-            비공개 초안 완료하기
+            완료하기
           </FixedBottomCTA>
         )
       ) : null}

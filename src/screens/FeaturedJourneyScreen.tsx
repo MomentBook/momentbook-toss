@@ -32,7 +32,7 @@ export function FeaturedJourneyScreen({
             <span aria-hidden="true">&lt;</span>
           </button>
 
-          <span className="section-badge section-badge--glass">다른 사람의 여정</span>
+          <span className="section-badge section-badge--glass">공개 여정</span>
         </div>
 
         <div className="featured-journey__hero-content">
@@ -43,20 +43,18 @@ export function FeaturedJourneyScreen({
           </div>
 
           <div className="featured-journey__hero-copy">
-            <p className="featured-journey__hero-eyebrow">Journey Detail</p>
+            <p className="featured-journey__hero-eyebrow">Journey</p>
             <h2>{journey.title}</h2>
             <p className="featured-journey__hero-summary">{journey.summary}</p>
           </div>
-
-          <p className="featured-journey__published">작성일 {journey.publishedAt}</p>
         </div>
       </section>
 
       <section className="panel-card panel-card--muted featured-journey__intro">
         <div className="section-heading section-heading--compact">
           <div>
-            <p className="section-heading__eyebrow">타임라인</p>
-            <h3>MomentBook 앱에서는 완성된 여정이 이렇게 공개돼요</h3>
+            <p className="section-heading__eyebrow">모먼트</p>
+            <h3>장면이 이어지는 흐름</h3>
           </div>
         </div>
 
@@ -80,7 +78,7 @@ export function FeaturedJourneyScreen({
                 <div>
                   <div className="featured-journey__timeline-track">
                     <span className="featured-journey__timeline-index">
-                      Timeline {String(index + 1).padStart(2, '0')}
+                      Moment {String(index + 1).padStart(2, '0')}
                     </span>
                     <span className="featured-journey__timeline-bar" />
                   </div>
@@ -111,8 +109,6 @@ export function FeaturedJourneyScreen({
                   </figure>
                 ))}
               </div>
-
-              <span className="featured-journey__timeline-action">타임라인 자세히 보기</span>
             </button>
           )
         })}

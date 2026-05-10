@@ -163,37 +163,8 @@ export function OrganizingScreen({
       <section className="hero-card">
         <div className="hero-card__content">
           <span className="section-badge section-badge--primary">비공개 구성</span>
-          <h2 className="hero-card__title">사진과 문장을 직접 골라 여정 초안을 만들어요.</h2>
-          <p className="hero-card__description">
-            앱인토스에서는 촬영 위치나 EXIF를 해석하지 않고, 내가 고른 사진과 메모만으로 모먼트를
-            구성해요. 공개는 나중에 MomentBook 앱에서 이어갈 수 있도록 비공개 흐름으로 유지해요.
-          </p>
-
-          <div className="organizing-guide-grid">
-            <article className="organizing-guide-card">
-              <span className="organizing-guide-card__index">1</span>
-              <div>
-                <h3>여러 장 선택</h3>
-                <p>아래 남은 사진에서 같은 장면으로 묶고 싶은 사진을 먼저 고르세요.</p>
-              </div>
-            </article>
-
-            <article className="organizing-guide-card">
-              <span className="organizing-guide-card__index">2</span>
-              <div>
-                <h3>드래그 또는 버튼</h3>
-                <p>선택한 사진 스택을 순간에 끌어 놓거나 활성 순간에 바로 담을 수 있어요.</p>
-              </div>
-            </article>
-
-            <article className="organizing-guide-card">
-              <span className="organizing-guide-card__index">3</span>
-              <div>
-                <h3>빼고 다시 담기</h3>
-                <p>잘못 담은 사진은 순간 카드에서 빼고 원하는 흐름으로 다시 정리할 수 있어요.</p>
-              </div>
-            </article>
-          </div>
+          <h2 className="hero-card__title">여정의 흐름을 정리하세요</h2>
+          <p className="hero-card__description">사진을 모먼트에 나누고 필요한 메모만 남겨요.</p>
         </div>
       </section>
 
@@ -201,7 +172,7 @@ export function OrganizingScreen({
         <div className="section-heading">
           <div>
             <p className="section-heading__eyebrow">여정 정보</p>
-            <h3>네이티브 앱처럼 제목, 설명, 대표 사진을 먼저 잡아요</h3>
+            <h3>제목과 대표 사진</h3>
           </div>
         </div>
 
@@ -252,14 +223,14 @@ export function OrganizingScreen({
       <section className="panel-card">
         <div className="section-heading">
           <div>
-            <p className="section-heading__eyebrow">순간 버킷</p>
-            <h3>위에서 흐름을 만들고 아래에서 사진을 채워요</h3>
+            <p className="section-heading__eyebrow">모먼트</p>
+            <h3>사진을 나눠 담기</h3>
           </div>
 
           <span className="stat-pill">{formatCount(unassignedPhotos.length, '장 남음')}</span>
         </div>
 
-        <div aria-label="모먼트 버킷 목록" className="moment-bucket-row" role="tablist">
+        <div aria-label="모먼트 목록" className="moment-bucket-row" role="tablist">
           {moments.map((moment, index) => {
             const isActive = moment.id === activeMomentId
             const isDropTarget = dragState?.overMomentId === moment.id
@@ -276,7 +247,7 @@ export function OrganizingScreen({
                 type="button"
                 onClick={() => setActiveMomentId(moment.id)}
               >
-                <span className="moment-bucket__eyebrow">순간 {index + 1}</span>
+                <span className="moment-bucket__eyebrow">모먼트 {index + 1}</span>
 
                 {moment.photos.length > 0 ? (
                   <div className="moment-bucket__preview-stack" aria-hidden="true">
@@ -298,7 +269,7 @@ export function OrganizingScreen({
 
                 <div className="moment-bucket__meta">
                   <strong>{formatCount(moment.photos.length, '장')}</strong>
-                  <span>{moment.photos.length === 0 ? '아직 비어 있어요' : '사진이 담겨 있어요'}</span>
+                  <span>{moment.photos.length === 0 ? '비어 있어요' : '담겨 있어요'}</span>
                 </div>
               </button>
             )
@@ -309,14 +280,14 @@ export function OrganizingScreen({
           <article className="moment-detail-card">
             <div className="moment-detail-card__header">
               <div>
-                <p className="section-heading__eyebrow">활성 순간</p>
+                <p className="section-heading__eyebrow">선택한 모먼트</p>
                 <h3>{activeMoment.title}</h3>
               </div>
               <span className="feature-chip">{formatCount(activeMoment.photos.length, '장')}</span>
             </div>
 
             <p className="helper-copy">
-              모먼트 제목과 메모는 내가 직접 적어요. 잘못 담은 사진은 여기서 빼고 다시 고를 수 있어요.
+              제목과 메모를 적고, 잘못 담은 사진은 다시 뺄 수 있어요.
             </p>
 
             <div className="moment-editor-form">
@@ -331,7 +302,7 @@ export function OrganizingScreen({
               />
 
               <TextArea
-                label="모먼트 메모"
+                label="메모"
                 labelOption="sustain"
                 maxLength={160}
                 minHeight={88}
@@ -361,7 +332,7 @@ export function OrganizingScreen({
             ) : (
               <div className="moment-detail-card__empty">
                 <strong>아직 담긴 사진이 없어요.</strong>
-                <p>선택한 사진을 끌어 놓거나 아래 버튼으로 이 순간에 바로 담아보세요.</p>
+                <p>아래에서 사진을 선택해 이 모먼트에 담아보세요.</p>
               </div>
             )}
           </article>
@@ -372,7 +343,7 @@ export function OrganizingScreen({
         <div className="section-heading">
           <div>
             <p className="section-heading__eyebrow">남은 사진</p>
-            <h3>아직 순간에 담기지 않은 사진이에요</h3>
+            <h3>모먼트에 담을 사진</h3>
           </div>
 
           {selectedCount > 0 ? <span className="stat-pill">{formatCount(selectedCount, '장 선택')}</span> : null}
@@ -401,15 +372,15 @@ export function OrganizingScreen({
           </div>
         ) : (
           <div className="organizing-complete-state">
-            <strong>모든 사진을 순간에 담았어요.</strong>
-            <p>이제 아래의 타임라인 미리보기 버튼으로 직접 만든 흐름을 확인해 보세요.</p>
+            <strong>모든 사진을 모먼트에 담았어요.</strong>
+            <p>이제 타임라인에서 흐름을 확인해 보세요.</p>
           </div>
         )}
 
         {selectedCount > 0 && activeMoment != null ? (
           <div className="selection-dock">
             <button
-              aria-label={`선택한 사진 ${selectedCount}장을 끌어서 순간에 놓기`}
+              aria-label={`선택한 사진 ${selectedCount}장을 끌어서 모먼트에 놓기`}
               className="selection-drag-pill"
               type="button"
               onPointerCancel={(event) => handleDragEnd(event, true)}
@@ -418,7 +389,7 @@ export function OrganizingScreen({
               onPointerUp={handleDragEnd}
             >
               <span className="selection-drag-pill__count">{formatCount(selectedCount, '장')}</span>
-              <span>끌어서 순간에 놓기</span>
+              <span>끌어서 모먼트에 놓기</span>
             </button>
 
             <div className="selection-dock__actions">
@@ -428,7 +399,7 @@ export function OrganizingScreen({
                 variant="weak"
                 onClick={() => handleAssignSelectedPhotos(activeMoment.id)}
               >
-                선택한 사진 담기
+                이 모먼트에 담기
               </Button>
 
               <button className="selection-dock__clear" type="button" onClick={() => setSelectedPhotoIds([])}>
@@ -449,7 +420,7 @@ export function OrganizingScreen({
           }}
         >
           <span>{formatCount(selectedCount, '장')}</span>
-          <strong>순간에 담기</strong>
+          <strong>모먼트에 담기</strong>
         </div>
       ) : null}
     </>
