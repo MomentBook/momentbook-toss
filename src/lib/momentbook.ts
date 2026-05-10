@@ -30,8 +30,13 @@ export type JourneyDraft = {
   subtitle: string
   slug: string
   previewPath: string
+  previewUrl: string
   coverPhoto: PhotoAsset | null
   timeline: JourneyMoment[]
+}
+
+type BuildJourneyDraftOptions = {
+  webBaseUrl?: string
 }
 
 const momentTitles = ['순간 1', '순간 2', '순간 3', '순간 4']
@@ -137,6 +142,7 @@ export function getUnassignedPhotos(photos: PhotoAsset[], moments: JourneyMoment
 export function buildJourneyDraft(
   photos: PhotoAsset[],
   moments: JourneyMoment[],
+  options: BuildJourneyDraftOptions = {},
 ): JourneyDraft {
   const timeline = moments
     .filter((moment) => moment.photos.length > 0)
@@ -149,6 +155,7 @@ export function buildJourneyDraft(
       endedAt: null,
     }))
   const slug = buildJourneySlug(photos)
+  const previewPath = `/journeys/${slug}`
 
   return {
     id: `journey-${slug}`,
@@ -161,7 +168,8 @@ export function buildJourneyDraft(
         ? '사진을 순간에 담아 여정의 흐름을 만들어 보세요.'
         : `${photos.length}장의 사진을 ${timeline.length}개의 순간으로 나눴어요.`,
     slug,
-    previewPath: `/journeys/${slug}`,
+    previewPath,
+    previewUrl: buildPreviewUrl(previewPath, options.webBaseUrl),
     coverPhoto: timeline[0]?.photos[0] ?? photos[0] ?? null,
     timeline,
   }
@@ -242,6 +250,16 @@ function buildJourneySlug(photos: PhotoAsset[]) {
       : 'draft'
 
   return `momentbook-${dateLabel}-${photos.length}`
+}
+
+function buildPreviewUrl(previewPath: string, webBaseUrl: string | undefined) {
+  const normalizedBaseUrl = webBaseUrl?.trim().replace(/\/+$/, '')
+
+  if (!normalizedBaseUrl) {
+    return previewPath
+  }
+
+  return `${normalizedBaseUrl}${previewPath}`
 }
 
 function buildMomentSummary(photoCount: number, index: number, totalMomentCount: number) {

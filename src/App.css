@@ -181,6 +181,11 @@
   background: #f5f8ff;
   border-color: #e1e9ff;
   color: #2f5fd0;
+  justify-content: flex-start;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: left;
+  white-space: normal;
 }
 
 .upload-flow {

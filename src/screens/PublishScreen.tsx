@@ -28,7 +28,7 @@ export function PublishScreen({
 
       <section className="panel-card">
         <div className="publish-success-card">
-          <span className="path-chip">{draft.previewPath}</span>
+          <span className="path-chip">{draft.previewUrl}</span>
           <h3>{draft.title}</h3>
           <p>{draft.subtitle}</p>
 
@@ -70,7 +70,7 @@ export function PublishScreen({
           ) : null}
 
           <div className="publish-meta">
-            <span className="path-chip">{draft.previewPath}</span>
+            <span className="path-chip">{draft.previewUrl}</span>
             <h3>{draft.title}</h3>
             <p>{draft.subtitle}</p>
 

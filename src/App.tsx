@@ -13,6 +13,7 @@ import {
   getFeaturedJourneyById,
   getFeaturedJourneyMomentById,
 } from './lib/featuredJourneys'
+import { serverConfig } from './lib/environment'
 import {
   FetchAlbumPhotosPermissionError,
   fetchMomentbookAlbumPhotos,
@@ -472,7 +473,9 @@ function App() {
       return
     }
 
-    const draft = buildJourneyDraft(flow.photos, flow.moments)
+    const draft = buildJourneyDraft(flow.photos, flow.moments, {
+      webBaseUrl: serverConfig.webBaseUrl,
+    })
     const nextFlow = buildDraftGeneratedState(flow, draft)
 
     startTransition(() => {

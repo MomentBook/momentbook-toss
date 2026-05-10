@@ -32,6 +32,7 @@
 | [0002](0002-adopt-tds-mobile-and-mobile-first-ui.md) | Accepted | TDS Mobile을 기본 UI 언어로 사용하고 모바일 우선 인터페이스를 유지한다 |
 | [0003](0003-model-flow-with-local-state-and-hash-navigation.md) | Accepted | 흐름 제어는 로컬 reducer 상태와 가벼운 hash navigation으로 관리한다 |
 | [0004](0004-keep-v1-organization-local-and-heuristic.md) | Accepted | v1 단계에서는 초안 생성과 publish를 로컬 휴리스틱/시뮬레이션으로 유지한다 |
+| [0005](0005-use-client-visible-environment-server-config.md) | Accepted | WebView 번들에는 공개 가능한 서버 URL만 환경별로 주입한다 |
 
 ## 참고한 문서
 
