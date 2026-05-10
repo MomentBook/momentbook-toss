@@ -4,11 +4,13 @@ This project adapts a Vite + React app into an Apps in Toss WebView mini app.
 
 ## Commands
 
-- `npm run dev`: Apps in Toss local development via Granite (`8081`) plus the configured web dev server (`5173`)
-- `npm run dev:web`: direct local web preview with Vite
-- `npm run dev:host`: Vite dev server bound to `0.0.0.0`
-- `npm run build:web`: static web build to `dist`
-- `npm run build`: Apps in Toss artifact build via `ait build`
+- `yarn install`: install dependencies with the project-pinned Yarn version
+- `yarn dev`: Apps in Toss local development via Granite (`8081`) plus the configured web dev server (`5173`)
+- `yarn dev:web`: direct local web preview with Vite
+- `yarn dev:host`: Vite dev server bound to `0.0.0.0`
+- `yarn build:web`: static web build to `dist`
+- `yarn build`: Apps in Toss artifact build via `ait build`
+- `yarn lint`: ESLint check
 
 ## Key Files
 
@@ -18,6 +20,7 @@ This project adapts a Vite + React app into an Apps in Toss WebView mini app.
 
 ## Notes
 
-- The app name in `granite.config.ts` is set to `momentbook`. Change it if your Apps in Toss console app name differs.
-- The current patch integrates the official `@apps-in-toss/web-framework`.
-- Official Apps in Toss design docs recommend TDS for non-game mini apps. In this environment the TDS package was not publicly installable from npm, so the UI layer is kept framework-ready and isolated from the runtime layer for a later TDS swap.
+- The app name in `granite.config.ts` is set to `MomentBook`. It must match the Apps in Toss console app ID exactly, including casing.
+- The project uses `@apps-in-toss/web-framework` with Yarn Modern through Corepack.
+- Yarn is configured with `nodeLinker: node-modules` to keep the runtime close to the existing Vite/Granite setup and the sibling MomentBook project.
+- TDS Mobile packages are installed and should remain the first choice for mobile UI changes.

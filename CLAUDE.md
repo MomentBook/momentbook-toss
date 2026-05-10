@@ -22,6 +22,6 @@
 ## 현재 주의점
 
 - `granite.config.ts`는 이미 사용자가 만진 파일입니다. 명시적 요청이 없다면 의도와 casing을 보존합니다.
-- Toss 사진 흐름은 `granite.config.ts`에 `photos` 권한이 필요할 가능성이 높지만, 현재 config의 `permissions`는 비어 있습니다.
+- Toss 사진 흐름은 `granite.config.ts`에 `photos: read` 권한이 선언돼 있습니다. 사진 흐름 변경 시 권한과 콘솔 설정의 정합성을 함께 확인합니다.
 - 한국어 UI 문자열 일부가 인코딩 손상 상태입니다. 관련 작업이 아니라면 incidental fix를 하지 않습니다.
-- `npm run lint`와 `npm run build:web`는 2026-04-18 기준 로컬에서 통과했습니다.
+- `yarn lint`와 `yarn build:web`는 2026-05-10 기준 로컬에서 통과했습니다.

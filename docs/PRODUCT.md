@@ -137,9 +137,8 @@ Sandbox 또는 브라우저 미리보기에서 플로우를 검증하는 내부 
 
 현재 코드와 문서 사이에서 반드시 기억해야 할 격차가 있습니다.
 
-- `granite.config.ts`의 `permissions`는 비어 있지만, 실제 Toss 사진 흐름은 `photos` 권한 검토가 필요할 가능성이 높습니다.
+- `granite.config.ts`에는 `photos: read` 권한이 선언돼 있습니다. Toss 콘솔과 실환경 권한 동작의 정합성은 계속 확인이 필요합니다.
 - `granite.config.ts`의 `appName`은 현재 `MomentBook`입니다. Toss 콘솔 ID와 정확히 일치하는지 별도 확인이 필요합니다.
-- `README.md`에는 오래된 설명이 남아 있습니다. 현재 저장소는 이미 TDS 패키지를 사용합니다.
 - 한국어 UI 문자열 일부가 mojibake 상태입니다.
 - `publish` 단계는 실제 게시 기능이 아니라 시간 지연이 있는 시뮬레이션입니다.
 - 웹 빌드 결과 메인 청크가 큽니다. 추후 code splitting 검토가 필요합니다.

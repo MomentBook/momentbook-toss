@@ -26,20 +26,20 @@
 - 비자명한 변경을 하기 전에 `docs/PRODUCT.md`와 관련 ADR을 확인합니다.
 - Apps in Toss SDK, Granite 설정, TDS 컴포넌트 동작은 추측하지 말고 공식 문서로 확인합니다.
 - `granite.config.ts`의 `appName`은 Toss 콘솔의 앱 ID와 정확히 일치해야 합니다. 현재 워크트리 값은 `MomentBook`이므로 대소문자를 임의로 바꾸지 마세요.
-- 현재 앱은 사진 API를 사용하지만 `granite.config.ts`의 `permissions`는 비어 있습니다. Toss 실환경에서 사진 흐름을 다룰 때는 `photos: read` 권한 검토가 선행돼야 합니다.
+- 현재 앱은 사진 API를 사용하며 `granite.config.ts`에 `photos: read` 권한이 선언돼 있습니다. Toss 실환경에서 사진 흐름을 바꿀 때는 권한과 콘솔 설정의 정합성을 함께 검토하세요.
 - UI는 모바일 우선, TDS 우선 원칙을 따릅니다. 이미 쓰고 있는 `Button`, `FixedBottomCTA`, `Loader`를 먼저 고려하세요.
 - 한국어 카피가 일부 파일에서 mojibake 상태입니다. 인코딩 복구가 작업 범위가 아니라면 incidental rewrite를 하지 마세요.
 
 ## 검증 명령
 
-- `npm run lint`
-- `npm run build:web`
-- `npm run dev:web`
-- `npm run dev`
-- `npm run build`
+- `yarn lint`
+- `yarn build:web`
+- `yarn dev:web`
+- `yarn dev`
+- `yarn build`
 
-`npm run lint`와 `npm run build:web`는 2026-04-18 기준 로컬에서 확인했습니다.
-`npm run dev`와 `npm run build`는 Apps in Toss 런타임과 콘솔 설정에 더 의존하므로 플랫폼 연동 변경 시 추가 검증하세요.
+`yarn lint`와 `yarn build:web`는 2026-05-10 기준 로컬에서 확인했습니다.
+`yarn dev`와 `yarn build`는 Apps in Toss 런타임과 콘솔 설정에 더 의존하므로 플랫폼 연동 변경 시 추가 검증하세요.
 
 ## 아키텍처 힌트
 
