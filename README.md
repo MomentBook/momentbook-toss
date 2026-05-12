@@ -21,6 +21,9 @@ mini app for MomentBook.
 
 ## Key Files
 
+- `AGENTS.md`: Codex entrypoint and repository working rules
+- `docs/DESIGN.md`: product scope, current architecture, and high-risk invariants
+- `docs/adr/README.md`: architecture decision index
 - `granite.config.ts`: Apps in Toss app contract
 - `src/lib/environment.ts`: client-visible environment/server URL validation
 - `src/lib/appsInToss.ts`: bridge access wrapper for browser, sandbox, and Toss runtime

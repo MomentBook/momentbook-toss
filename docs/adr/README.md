@@ -7,7 +7,7 @@
 
 - 코드는 현재 상태를 보여주지만, 선택의 이유는 시간이 지나면 금방 사라집니다.
 - 이 저장소는 사람과 에이전트가 함께 읽는 작업 공간이므로, 재설명 비용이 큰 결정을 저장소 안에 남겨야 합니다.
-- `AGENTS.md`와 `CLAUDE.md`는 짧게 유지하고, 아키텍처 근거는 이 디렉터리에서 관리합니다.
+- `AGENTS.md`는 짧게 유지하고, 제품/설계 맥락은 `docs/DESIGN.md`, 아키텍처 근거는 이 디렉터리에서 관리합니다.
 
 ## 상태 규칙
 
@@ -34,10 +34,11 @@
 | [0004](0004-keep-v1-organization-local-and-heuristic.md) | Superseded by 0006 | v1 단계에서는 초안 생성과 publish를 로컬 휴리스틱/시뮬레이션으로 유지한다 |
 | [0005](0005-use-client-visible-environment-server-config.md) | Accepted | WebView 번들에는 공개 가능한 서버 URL만 환경별로 주입한다 |
 | [0006](0006-keep-toss-v1-private-and-manual.md) | Accepted | Toss v1은 비공개 수동 여정 구성으로 유지한다 |
+| [0007](0007-simplify-docs-for-codex.md) | Accepted | Codex 중심 문서 체계로 단순화한다 |
 
 ## 참고한 문서
 
 - Michael Nygard, "Documenting Architecture Decisions": https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions
 - OpenAI, "Introducing Codex": https://openai.com/index/introducing-codex/
 - OpenAI, "Harness engineering: leveraging Codex in an agent-first world": https://openai.com/index/harness-engineering/
-- Anthropic, "How Claude remembers your project": https://code.claude.com/docs/en/memory
+- OpenAI Developers, "Custom instructions with AGENTS.md": https://developers.openai.com/codex/guides/agents-md
