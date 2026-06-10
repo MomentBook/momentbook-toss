@@ -1,7 +1,7 @@
 # MomentBook Toss Design
 
 - Status: Living document
-- Last updated: 2026-05-12
+- Last updated: 2026-06-10
 - Role: product, architecture, and agent-work source of truth for this repository
 
 ## Purpose
@@ -20,6 +20,57 @@ MomentBook Toss는 Apps in Toss 안에서 MomentBook 네이티브 앱의 핵심 
 - 서버 업로드, 공개 URL, Toss 로그인 연동은 실제 계약이 준비되기 전까지 제품에서 숨깁니다.
 - 네이티브 MomentBook의 calm, artifact-first, mobile-first 톤을 유지합니다.
 - Toss 안에서 어색하지 않도록 TDS Mobile과 Apps in Toss 패턴을 우선 사용합니다.
+- UX/UI 작업은 Apple-inspired 방향을 따르되, Apple 브랜드나 네이티브 iOS 화면을 복제하지 않습니다.
+
+## Apple-Inspired UX/UI Direction
+
+MomentBook Toss의 Apple 스타일은 장식적인 모방이 아니라, 사진과 여정 결과물이 먼저 보이는 조용한 인터페이스, 명확한 정보 구조, 정밀한 간격, 읽기 쉬운 타이포그래피, 부드럽지만 절제된 피드백을 의미합니다.
+
+이 방향은 TDS Mobile과 Apps in Toss 런타임 위에 얹는 제품 디자인 기준입니다. TDS 컴포넌트, Toss 권한/런타임 제약, 비공개 초안 제품 범위를 Apple 스타일보다 우선합니다.
+
+### Experience Principles
+
+- 화면은 항상 "현재 어디인가", "무엇을 할 수 있는가", "다음에 어디로 갈 수 있는가"를 즉시 답해야 합니다.
+- 여정 사진, 타임라인, 사용자가 만든 모먼트가 주인공입니다. 내비게이션, 설명, 배지는 콘텐츠를 보조하는 얇은 레이어로 둡니다.
+- 한 화면의 주요 CTA는 하나만 선명하게 둡니다. 보조 액션은 시각적 무게를 낮추고, 실제 게시나 계정 연결처럼 범위 밖 기능으로 오해될 표현을 피합니다.
+- 사용자가 선택한 사진, 대표 이미지, 모먼트 구성은 직접 조작하는 느낌이 나야 합니다. 선택/해제/정렬/편집 상태는 즉각적인 시각 피드백과 햅틱 가능 지점으로 연결합니다.
+- 빈 상태, 오류, 권한 거부, 브라우저 fallback은 차분하고 구체적으로 다음 행동을 제시합니다.
+
+### Visual Language
+
+- 배경은 밝고 깨끗한 중립 표면을 기본으로 하며, 사진과 사용자 콘텐츠에서 색이 나오게 합니다.
+- Apple-like material은 floating navigation, bottom CTA, small control cluster처럼 콘텐츠 위에 떠야 하는 레이어에만 제한적으로 사용합니다. 콘텐츠 카드, 목록, 타임라인 전체를 과도한 blur/glass로 덮지 않습니다.
+- glass-on-glass, blur-on-blur, 낮은 대비의 반투명 텍스트는 금지합니다. 반투명 표면을 쓰면 배경 밝기, 다크 모드, 이미지 위 배치에서 대비를 확인합니다.
+- 둥근 모서리는 부모/자식 요소가 같은 중심을 공유하는 concentric geometry처럼 보이게 맞춥니다. 반지름은 임의로 섞지 말고 TDS 토큰이나 기존 로컬 값을 우선합니다.
+- 그림자는 깊이를 설명할 때만 사용합니다. 장식적 elevation을 여러 겹 쌓지 않습니다.
+- 색상 강조는 primary CTA, 선택 상태, 위험/주의 상태처럼 기능적 의미가 있을 때만 씁니다. 모든 요소를 같은 accent로 물들이지 않습니다.
+
+### Layout And Typography
+
+- 모바일 단일 컬럼을 기본으로 하며, 주요 콘텐츠는 확대나 가로 스크롤 없이 보여야 합니다.
+- 터치 타깃은 최소 44 x 44 CSS px 수준을 목표로 하고, TDS 컴포넌트가 제공하는 기본 hit area를 축소하지 않습니다.
+- 본문과 입력 텍스트는 시스템 sans stack과 TDS typography를 우선합니다. 작은 보조 텍스트도 일반적인 모바일 시청 거리에서 확대 없이 읽혀야 합니다.
+- 화면 제목, 섹션 제목, 설명, CTA의 계층을 명확히 분리합니다. 브랜드성 큰 제목보다 현재 작업 맥락을 알려주는 제목을 우선합니다.
+- 한국어 문구는 줄바꿈과 장문 overflow를 먼저 고려합니다. 고정 높이 버튼, chip, pill 안에서 텍스트가 잘리거나 겹치면 레이아웃을 바꿉니다.
+- 이미지와 미디어는 원본 비율을 유지하고, Retina급 밀도에서 흐릿해 보이지 않도록 충분한 해상도나 명확한 placeholder를 사용합니다.
+
+### Motion And Feedback
+
+- 전환은 상태 변화의 방향을 설명해야 합니다. 단순 장식 애니메이션이나 느린 등장 효과는 피합니다.
+- 버튼, 선택 카드, 사진 썸네일은 눌림/선택/비활성/로딩 상태를 분명히 보여줍니다.
+- Toss 햅틱은 성공, 선택, 완료처럼 사용자가 결과를 기대하는 순간에만 절제해서 사용합니다.
+- reduced motion, reduced transparency, increased contrast 사용자를 고려해 motion과 glass 효과가 없어도 정보 구조가 유지되어야 합니다.
+
+### Apple-Style UI Review Checklist
+
+- 첫 화면에서 현재 단계, 핵심 콘텐츠, 다음 CTA가 즉시 보이는가?
+- 사진/타임라인보다 설명 박스, 장식, 배지가 더 눈에 띄지 않는가?
+- primary CTA는 하나이며, 실제 공개/저장/로그인처럼 범위 밖 결과를 암시하지 않는가?
+- 모든 터치 컨트롤은 44 x 44 CSS px 수준의 hit area를 가지는가?
+- 한국어 장문, 작은 화면, 다크 모드, 이미지 위 텍스트에서 대비와 overflow가 안전한가?
+- bottom CTA, modal, sheet, toast, 권한 fallback이 기존 TDS/Apps in Toss 패턴과 충돌하지 않는가?
+- glass/blur/material은 계층을 더 명확히 만드는 곳에만 쓰였고, glass-on-glass가 없는가?
+- `browser`, `sandbox`, `toss` 런타임에서 같은 핵심 행동을 완료할 수 있는가?
 
 ## Current Scope
 
@@ -49,6 +100,8 @@ MomentBook Toss는 Apps in Toss 안에서 MomentBook 네이티브 앱의 핵심 
 - 분석 이벤트 설계 및 대시보드
 - 콘텐츠 moderation 파이프라인
 - admin/backoffice/web CMS/SEO-only surface
+- Apple 브랜드, Apple 자산, 네이티브 iOS 화면의 직접 복제
+- CSS만으로 구현한 과도한 Liquid Glass 클론이나 읽기성을 낮추는 장식형 blur
 
 ## Current Flow
 
@@ -104,6 +157,8 @@ ADR 0004는 ADR 0006으로 대체되었습니다.
 
 - 모바일 우선 단일 컬럼 UX를 유지합니다.
 - 주요 액션은 TDS Mobile 컴포넌트를 우선 사용합니다.
+- Apple-inspired 스타일은 TDS Mobile의 접근성, 상태, CTA semantics를 대체하지 않습니다.
+- glass, blur, motion, tint를 추가할 때는 대비, reduced motion/transparency fallback, 한국어 overflow를 함께 확인합니다.
 - 사용자가 실제 공개가 완료됐다고 오해할 수 있는 카피나 CTA를 피합니다.
 - 한국어 UI 문자열 일부가 mojibake 상태일 수 있습니다. 관련 작업이 아니면 incidental rewrite하지 않습니다.
 
@@ -140,3 +195,10 @@ ADR 0004는 ADR 0006으로 대체되었습니다.
 - Apps in Toss appLogin: https://developers-apps-in-toss.toss.im/bedrock/reference/framework/%EB%A1%9C%EA%B7%B8%EC%9D%B8/appLogin.html
 - TDS FixedBottomCTA: https://tossmini-docs.toss.im/tds-mobile/components/BottomCTA/fixed-bottom-cta/
 - TDS TextArea: https://tossmini-docs.toss.im/tds-mobile/components/TextField/text-area/
+- Apple Human Interface Guidelines: https://developer.apple.com/design/human-interface-guidelines/
+- Apple UI Design Dos and Don'ts: https://developer.apple.com/design/tips/
+- Apple Design Resources: https://developer.apple.com/design/resources/
+- Apple WWDC25, "Meet Liquid Glass": https://developer.apple.com/videos/play/wwdc2025/219/
+- Apple WWDC25, "Get to know the new design system": https://developer.apple.com/videos/play/wwdc2025/356/
+- Apple WWDC25, "Design foundations from idea to interface": https://developer.apple.com/videos/play/wwdc2025/359/
+- Nielsen Norman Group, "Design Systems 101": https://www.nngroup.com/articles/design-systems-101/

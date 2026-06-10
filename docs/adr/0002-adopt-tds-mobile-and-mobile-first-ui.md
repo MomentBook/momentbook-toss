@@ -1,46 +1,72 @@
-# ADR 0002: TDS Mobile을 기본 UI 언어로 사용하고 모바일 우선 인터페이스를 유지한다
+# ADR 0002: Adopt TDS Mobile And Mobile-First UI
 
 - Status: Accepted
 - Date: 2026-04-18
-
-## Context
-
-MomentBook는 Toss 앱 내부의 WebView에서 사용될 가능성이 높은 서비스입니다.
-Apps in Toss 디자인 문서는 TDS를 토스 커뮤니티 전반의 공통 디자인 언어로 설명하며, 일관된 제품 경험과 더 빠른 구현을 장점으로 제시합니다.
-또한 WebView 디자인 가이드는 TDS Mobile 사용 시 React 환경과 React 18 호환성을 전제로 하고, 최상위 Provider 설정을 요구합니다.
-
-현재 코드베이스는 이미 그 전제를 상당 부분 채택하고 있습니다.
-
-- `src/main.tsx`에서 `TDSMobileAITProvider`로 앱 전체를 감쌉니다.
-- 주요 액션은 `Button`, `FixedBottomCTA`, `Loader` 같은 TDS 컴포넌트를 사용합니다.
-- 레이아웃과 브랜딩은 `src/App.css`에서 커스텀하지만, 상호작용 컴포넌트는 TDS에 기대고 있습니다.
-- 화면 폭, 하단 CTA, safe area 패딩 등은 모바일 사용 맥락을 전제로 설계되어 있습니다.
+- Scope: UI language, mobile layout, Toss-native interaction patterns
+- Read when: changing UI components, CTAs, inputs, loading states, layout, or
+  mobile interaction behavior
 
 ## Decision
 
-MomentBook는 TDS Mobile을 기본 UI 언어로 유지합니다.
+MomentBook Toss uses TDS Mobile as the default UI language and keeps the app
+mobile-first.
 
-- 상호작용 컴포넌트는 가능하면 TDS를 우선 사용합니다.
-- 커스텀 CSS는 레이아웃, 카드 컴포지션, 브랜드 톤 조정에 한정합니다.
-- 모바일 우선 단일 컬럼 UX를 유지합니다.
+- Prefer TDS Mobile components for interactive controls.
+- Keep custom CSS focused on layout, composition, and MomentBook brand tone.
+- Maintain a single-column mobile-first flow unless a new product decision says
+  otherwise.
+
+## Context
+
+The app runs in a Toss WebView, so its UI should feel native to the Toss
+environment while still carrying MomentBook's calm, artifact-first tone.
+
+The current code already follows this direction:
+
+- `src/main.tsx` wraps the app in `TDSMobileAITProvider`.
+- Main actions use TDS components such as `Button`, `FixedBottomCTA`, and
+  `Loader`.
+- Layout and branding live mostly in `src/App.css`.
+- Screen width, safe area padding, and bottom CTA behavior assume mobile use.
+
+## Operating Rules
+
+- Check TDS Mobile before adding custom buttons, loaders, bottom CTAs, input
+  fields, or common controls.
+- Preserve bottom CTA and safe-area behavior when changing screens.
+- Avoid copy or CTA states that imply public publishing has happened.
+- Test compact mobile widths for Korean text overflow.
+- Do not incidentally rewrite unrelated Korean mojibake while doing UI work.
 
 ## Consequences
 
-- React 메이저 업그레이드는 TDS 호환성을 함께 점검해야 합니다.
-- 새로운 버튼, 로더, CTA, 리스트 성격의 UI를 만들 때는 TDS 문서를 먼저 확인해야 합니다.
-- 시각적으로 차별화하더라도 Toss 환경에서 어색하지 않은 수준의 패턴을 유지해야 합니다.
-- 디자인 시스템을 우회하는 커스텀 인터랙션이 많아지면 유지보수 비용이 증가합니다.
+- Users get a Toss-appropriate interaction model.
+- The app avoids maintaining a complete custom component system.
+- React and TDS version upgrades must be checked together.
+- Heavy custom interaction patterns increase maintenance cost and should be
+  justified by a product need.
 
-## Alternatives considered
+## Revisit When
 
-- 커스텀 HTML/CSS 컴포넌트 체계로 일원화
-- React Native 전용 TDS로 전환
-- 디자인 시스템 없이 페이지별 개별 구현
+- TDS Mobile no longer supports the required React/runtime version.
+- MomentBook Toss needs a UI pattern that TDS cannot reasonably express.
+- The app moves out of Toss and needs a different design system.
+
+## Alternatives Considered
+
+- Fully custom HTML/CSS component system
+- React Native-only TDS surface
+- Page-by-page design without a shared UI language
 
 ## References
 
-- TDS 소개: https://developers-apps-in-toss.toss.im/design/components.html
-- WebView로 디자인 개발하기: https://developers-apps-in-toss.toss.im/design_tutorials/webview.html
-- TDS Mobile Button: https://tossmini-docs.toss.im/tds-mobile/components/button/
-- TDS Mobile FixedBottomCTA: https://tossmini-docs.toss.im/tds-mobile/components/BottomCTA/fixed-bottom-cta/
-- TDS Mobile Loader: https://tossmini-docs.toss.im/tds-mobile/components/loader/
+- TDS overview:
+  https://developers-apps-in-toss.toss.im/design/components.html
+- Apps in Toss WebView design:
+  https://developers-apps-in-toss.toss.im/design_tutorials/webview.html
+- TDS Mobile Button:
+  https://tossmini-docs.toss.im/tds-mobile/components/button/
+- TDS Mobile FixedBottomCTA:
+  https://tossmini-docs.toss.im/tds-mobile/components/BottomCTA/fixed-bottom-cta/
+- TDS Mobile Loader:
+  https://tossmini-docs.toss.im/tds-mobile/components/loader/
