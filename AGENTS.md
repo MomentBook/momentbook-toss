@@ -57,10 +57,10 @@ work.
 
 - This is a Vite + React 18 + TypeScript WebView mini app for Apps in Toss.
 - Consider all runtime contexts: `browser`, `sandbox`, and `toss`.
-- The current completion step is a private draft completion simulation, not real
-  publishing.
-- Server publish, Toss login token exchange, native account linking, and public
-  journey mutation APIs are out of scope.
+- The launch target is Toss login based private server save; the current code
+  still simulates private draft completion.
+- Public publishing, WebView-side Toss token exchange, native account linking,
+  and public journey mutation APIs are out of scope.
 - `granite.config.ts` `appName` is `MomentBook`; do not change casing casually.
 - Photo-flow changes must keep `photos: read` permission and Toss console
   configuration aligned.
@@ -74,7 +74,7 @@ work.
 - App orchestration: `src/App.tsx`
 - Screen order and access rules: `src/lib/navigation.ts`
 - Toss runtime adapter: `src/lib/appsInToss.ts`
-- Private draft and manual moment logic: `src/lib/momentbook.ts`
+- Current private draft and manual moment logic: `src/lib/momentbook.ts`
 - Screen components: `src/screens/*`
 - Apps in Toss contract: `granite.config.ts`
 

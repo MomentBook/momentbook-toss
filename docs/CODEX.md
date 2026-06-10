@@ -92,8 +92,9 @@ high-risk boundaries:
   contract change is explicitly decided.
 - Photo selection requires `photos: read`; align code, Granite config, and Toss
   console setup when changing photo flows.
-- Completion means private draft completion simulation, not real publish.
-- Server write/publish, Toss login token exchange, public URL creation, and
+- The launch target is Toss login based private server save; the current code
+  still simulates private draft completion.
+- Public publishing, public URL creation, WebView-side Toss token exchange, and
   native account linking are out of scope.
 - Keep client bundles free of server secrets. Only public `VITE_*` values may
   be exposed.

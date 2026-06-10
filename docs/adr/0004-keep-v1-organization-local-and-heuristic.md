@@ -8,9 +8,9 @@
 
 ## Current Guidance
 
-This ADR is preserved for history. Current product policy is ADR 0006:
-Toss v1 is a private, manual journey draft flow. Do not use this ADR to justify
-new publish semantics or automatic grouping.
+This ADR is preserved for history. ADR 0006 later made Toss v1 a private,
+manual journey draft flow. ADR 0009 is the current launch target policy. Do not
+use this ADR to justify new publish semantics or automatic grouping.
 
 ## Original Decision
 
@@ -32,8 +32,9 @@ page pipeline, local simulation was the lowest-friction way to validate the
 organizing experience.
 
 This was later superseded when the product direction shifted toward an Apps in
-Toss acquisition surface: users browse public examples and manually compose a
-private draft rather than generating a publish-like result.
+Toss acquisition surface: users browsed public examples and manually composed a
+private draft rather than generating a publish-like result. ADR 0009 later
+shifted the launch target to Toss login based private server save.
 
 ## Consequences At The Time
 
@@ -47,7 +48,8 @@ private draft rather than generating a publish-like result.
 
 The word `publish` and automatic organization assumptions could mislead users
 about what the Toss mini app actually does. ADR 0006 replaced this with private
-manual draft semantics.
+manual draft semantics, and ADR 0009 now defines private server save as the
+launch target.
 
 ## References
 

@@ -1,6 +1,6 @@
 # ADR 0006: Keep Toss V1 Private And Manual
 
-- Status: Accepted
+- Status: Superseded by [0009](0009-use-toss-login-private-server-save-flow.md)
 - Date: 2026-05-10
 - Scope: Toss v1 product flow, private draft semantics, manual moment grouping
 - Read when: changing journey creation, publish/private copy, photo grouping,

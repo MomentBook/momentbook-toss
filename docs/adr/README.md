@@ -14,10 +14,11 @@ current task.
 - Screen flow, reducer state, or hash navigation: read ADR 0003.
 - Legacy local heuristic publish language: read ADR 0004 only for history.
 - Client-visible environment/server config: read ADR 0005.
-- Private manual Toss v1 draft flow: read ADR 0006.
+- Historical private manual Toss v1 draft flow: read ADR 0006 only for history.
 - Codex documentation structure before 2026-06-10: read ADR 0007 only for
   history.
 - Current Codex operating documentation: read ADR 0008.
+- Toss login private server save flow: read ADR 0009.
 
 ## Source Of Truth Map
 
@@ -65,9 +66,10 @@ Keep one decision per ADR. Prefer concrete repository rules over broad essays.
 | [0003](0003-model-flow-with-local-state-and-hash-navigation.md) | Accepted | Model screen flow with local reducer state and lightweight hash navigation. | Navigation, state transitions, screen access |
 | [0004](0004-keep-v1-organization-local-and-heuristic.md) | Superseded by [0006](0006-keep-toss-v1-private-and-manual.md) | Historical local heuristic organization and publish simulation decision. | Legacy context only |
 | [0005](0005-use-client-visible-environment-server-config.md) | Accepted | Inject only public server URLs into the WebView bundle by environment. | Env vars, server URLs, client config, secrets |
-| [0006](0006-keep-toss-v1-private-and-manual.md) | Accepted | Keep Toss v1 as private, manual journey draft composition. | Product flow, publish semantics, photo grouping |
+| [0006](0006-keep-toss-v1-private-and-manual.md) | Superseded by [0009](0009-use-toss-login-private-server-save-flow.md) | Historical private manual draft flow. | Legacy context only |
 | [0007](0007-simplify-docs-for-codex.md) | Superseded by [0008](0008-split-codex-startup-map-and-operating-guide.md) | Historical Codex-focused documentation simplification. | Documentation history only |
 | [0008](0008-split-codex-startup-map-and-operating-guide.md) | Accepted | Keep `AGENTS.md` as a compact startup map and `docs/CODEX.md` as the Codex operating guide. | Codex workflow, agent docs, instruction structure |
+| [0009](0009-use-toss-login-private-server-save-flow.md) | Accepted | Use Toss login based private server save as the launch target flow. | Product flow, Toss login, private save, upload semantics |
 
 ## Reference Baseline
 
