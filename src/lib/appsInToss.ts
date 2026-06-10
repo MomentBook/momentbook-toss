@@ -19,9 +19,18 @@ export interface AlbumPhoto {
 
 export { FetchAlbumPhotosPermissionError }
 
+export type TossAppLoginResult = {
+  authorizationCode: string
+  referrer: string
+}
+
 type AlbumPhotoPermissionStatus =
   | Awaited<ReturnType<typeof fetchAlbumPhotos.getPermission>>
   | 'osPermissionDenied'
+
+type AppsInTossFrameworkWithLogin = typeof import('@apps-in-toss/web-framework') & {
+  appLogin?: () => Promise<unknown>
+}
 
 export function getRuntimeEnvironment(): RuntimeEnvironment {
   return getEnvironment()
@@ -69,6 +78,22 @@ export async function triggerSuccessHaptic(): Promise<RuntimeActionResult> {
   }
 }
 
+export async function requestTossAppLogin(): Promise<TossAppLoginResult> {
+  if (getEnvironment() === 'browser') {
+    throw new Error('브라우저 미리보기에서는 Toss 로그인을 실행할 수 없어요.')
+  }
+
+  const framework = await import('@apps-in-toss/web-framework') as AppsInTossFrameworkWithLogin
+
+  if (typeof framework.appLogin !== 'function') {
+    throw new Error('현재 설치된 Apps in Toss SDK에서 appLogin을 찾지 못했어요.')
+  }
+
+  const loginResult = await framework.appLogin()
+
+  return normalizeAppLoginResult(loginResult)
+}
+
 function getEnvironment(): RuntimeEnvironment {
   try {
     return getOperationalEnvironment()
@@ -93,4 +118,32 @@ async function ensureAlbumPhotoPermission() {
   if (resolvedPermission !== 'allowed') {
     throw new FetchAlbumPhotosPermissionError()
   }
+}
+
+function normalizeAppLoginResult(loginResult: unknown): TossAppLoginResult {
+  if (typeof loginResult !== 'object' || loginResult == null) {
+    throw new Error('Toss 로그인 응답을 확인하지 못했어요.')
+  }
+
+  const authorizationCode = getStringField(loginResult, 'authorizationCode') ?? getStringField(loginResult, 'code')
+  const referrer = getStringField(loginResult, 'referrer')
+
+  if (authorizationCode == null || referrer == null) {
+    throw new Error('Toss 로그인 응답에 필요한 authorization code 또는 referrer가 없어요.')
+  }
+
+  return {
+    authorizationCode,
+    referrer,
+  }
+}
+
+function getStringField(source: object, key: string) {
+  if (!(key in source)) {
+    return null
+  }
+
+  const value = (source as Record<string, unknown>)[key]
+
+  return typeof value === 'string' && value.trim().length > 0 ? value : null
 }

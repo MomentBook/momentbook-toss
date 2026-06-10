@@ -93,7 +93,7 @@ high-risk boundaries:
 - Photo selection requires `photos: read`; align code, Granite config, and Toss
   console setup when changing photo flows.
 - The launch target is Toss login based private server save; the current code
-  still simulates private draft completion.
+  implements the 4-step UI and Toss auth boundary but not private upload/save.
 - Public publishing, public URL creation, WebView-side Toss token exchange, and
   native account linking are out of scope.
 - Keep client bundles free of server secrets. Only public `VITE_*` values may

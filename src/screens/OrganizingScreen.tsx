@@ -1,21 +1,19 @@
 import { Button, TextArea, TextField } from '@toss/tds-mobile'
-import { useRef, useState, type ChangeEvent, type PointerEvent } from 'react'
+import { useRef, useState, type PointerEvent } from 'react'
 import {
   assignPhotosToJourneyMoment,
+  createJourneyMoment,
   formatCount,
   getUnassignedPhotos,
   removePhotoFromJourneyMoment,
   updateJourneyMomentDetails,
-  type JourneyDetails,
   type JourneyMoment,
   type PhotoAsset,
 } from '../lib/momentbook'
 
 type OrganizingScreenProps = {
-  details: JourneyDetails
   photos: PhotoAsset[]
   moments: JourneyMoment[]
-  onChangeDetails: (details: JourneyDetails) => void
   onChangeMoments: (moments: JourneyMoment[]) => void
 }
 
@@ -26,10 +24,8 @@ type DragState = {
 }
 
 export function OrganizingScreen({
-  details,
   photos,
   moments,
-  onChangeDetails,
   onChangeMoments,
 }: OrganizingScreenProps) {
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([])
@@ -46,28 +42,6 @@ export function OrganizingScreen({
   const selectedCount = selectedPhotoIdsInTray.length
   const assignedPhotoCount = photos.length - unassignedPhotos.length
   const groupedPercent = photos.length === 0 ? 0 : Math.round((assignedPhotoCount / photos.length) * 100)
-  const coverPhoto = photos.find((photo) => photo.id === details.coverPhotoId) ?? photos[0] ?? null
-
-  const handleJourneyTitleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onChangeDetails({
-      ...details,
-      title: event.currentTarget.value,
-    })
-  }
-
-  const handleJourneyDescriptionChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    onChangeDetails({
-      ...details,
-      description: event.currentTarget.value,
-    })
-  }
-
-  const handleCoverPhotoChange = (coverPhotoId: string) => {
-    onChangeDetails({
-      ...details,
-      coverPhotoId,
-    })
-  }
 
   const handleTogglePhoto = (photoId: string) => {
     setSelectedPhotoIds((current) =>
@@ -97,6 +71,13 @@ export function OrganizingScreen({
 
   const handleMomentSummaryChange = (momentId: string, summary: string) => {
     onChangeMoments(updateJourneyMomentDetails(moments, momentId, { summary }))
+  }
+
+  const handleAddMoment = () => {
+    const nextMoment = createJourneyMoment(moments.length)
+
+    onChangeMoments([...moments, nextMoment])
+    setActiveMomentId(nextMoment.id)
   }
 
   const resolveDropMomentId = (x: number, y: number) => {
@@ -167,7 +148,9 @@ export function OrganizingScreen({
         <div className="hero-card__content">
           <span className="section-badge section-badge--primary">비공개 구성</span>
           <h2 className="hero-card__title">여정의 흐름을 정리하세요</h2>
-          <p className="hero-card__description">사진을 모먼트에 나누고 필요한 메모만 남겨요.</p>
+          <p className="hero-card__description">
+            먼저 보여줄 장면만 모먼트로 만들고, 남은 사진은 미정리 사진으로 함께 저장해요.
+          </p>
 
           <div
             className="organizing-progress"
@@ -184,75 +167,16 @@ export function OrganizingScreen({
         </div>
       </section>
 
-      <section className="panel-card journey-editor-card">
-        <div className="section-heading">
-          <div>
-            <p className="section-heading__eyebrow">여정 정보</p>
-            <h3>제목과 대표 사진</h3>
-          </div>
-        </div>
-
-        <div className="journey-editor-layout">
-          <div className="journey-editor-form">
-            <TextField
-              label="여정 제목"
-              labelOption="sustain"
-              maxLength={60}
-              placeholder="예: 제주에서 천천히 걸은 주말"
-              value={details.title}
-              variant="box"
-              onChange={handleJourneyTitleChange}
-            />
-
-            <TextArea
-              label="여정 설명"
-              labelOption="sustain"
-              maxLength={180}
-              minHeight={96}
-              placeholder="이 여정에서 기억하고 싶은 분위기를 짧게 적어주세요."
-              value={details.description}
-              variant="box"
-              onChange={handleJourneyDescriptionChange}
-            />
-          </div>
-
-          {coverPhoto != null ? (
-            <figure className="cover-preview">
-              <img alt="선택한 대표 사진 미리보기" loading="lazy" src={coverPhoto.previewUrl} />
-              <figcaption>대표 사진</figcaption>
-            </figure>
-          ) : null}
-        </div>
-
-        <div className="cover-picker cover-picker--strip" aria-label="대표 사진 선택">
-          {photos.slice(0, 8).map((photo, index) => {
-            const isSelected = details.coverPhotoId === photo.id
-
-            return (
-              <button
-                key={photo.id}
-                aria-label={`대표 사진 ${index + 1} 선택`}
-                aria-pressed={isSelected}
-                className={`cover-picker__item${isSelected ? ' cover-picker__item--selected' : ''}`}
-                type="button"
-                onClick={() => handleCoverPhotoChange(photo.id)}
-              >
-                <img alt="" loading="lazy" src={photo.previewUrl} />
-                <span>{isSelected ? '대표' : String(index + 1)}</span>
-              </button>
-            )
-          })}
-        </div>
-      </section>
-
       <section className="panel-card">
         <div className="section-heading">
           <div>
-            <p className="section-heading__eyebrow">모먼트</p>
+            <p className="section-heading__eyebrow">3/4 모먼트</p>
             <h3>사진을 나눠 담기</h3>
           </div>
 
-          <span className="stat-pill">{formatCount(unassignedPhotos.length, '장 남음')}</span>
+          <button className="moment-add-button" type="button" onClick={handleAddMoment}>
+            모먼트 추가
+          </button>
         </div>
 
         <div aria-label="모먼트 목록" className="moment-bucket-row" role="tablist">
@@ -370,34 +294,44 @@ export function OrganizingScreen({
       <section className="panel-card">
         <div className="section-heading">
           <div>
-            <p className="section-heading__eyebrow">남은 사진</p>
-            <h3>모먼트에 담을 사진</h3>
+            <p className="section-heading__eyebrow">미정리 사진</p>
+            <h3>나중에 정리해도 되는 사진</h3>
           </div>
 
-          {selectedCount > 0 ? <span className="stat-pill">{formatCount(selectedCount, '장 선택')}</span> : null}
+          <span className="stat-pill">
+            {selectedCount > 0
+              ? formatCount(selectedCount, '장 선택')
+              : formatCount(unassignedPhotos.length, '장 저장')}
+          </span>
         </div>
 
         {unassignedPhotos.length > 0 ? (
-          <div className="organizing-photo-grid" aria-label="남은 사진 목록">
-            {unassignedPhotos.map((photo, index) => {
-              const isSelected = selectedPhotoIdsInTray.includes(photo.id)
+          <>
+            <p className="unassigned-save-note">
+              지금 모먼트에 넣지 않아도 서버에는 함께 저장돼요.
+            </p>
 
-              return (
-                <button
-                  key={photo.id}
-                  aria-pressed={isSelected}
-                  className={`organizing-photo-tile${isSelected ? ' organizing-photo-tile--selected' : ''}`}
-                  type="button"
-                  onClick={() => handleTogglePhoto(photo.id)}
-                >
-                  <img alt={`남은 사진 ${index + 1}`} loading="lazy" src={photo.previewUrl} />
-                  <span className="organizing-photo-tile__check" aria-hidden="true">
-                    {isSelected ? '✓' : ''}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+            <div className="organizing-photo-grid" aria-label="미정리 사진 목록">
+              {unassignedPhotos.map((photo, index) => {
+                const isSelected = selectedPhotoIdsInTray.includes(photo.id)
+
+                return (
+                  <button
+                    key={photo.id}
+                    aria-pressed={isSelected}
+                    className={`organizing-photo-tile${isSelected ? ' organizing-photo-tile--selected' : ''}`}
+                    type="button"
+                    onClick={() => handleTogglePhoto(photo.id)}
+                  >
+                    <img alt={`미정리 사진 ${index + 1}`} loading="lazy" src={photo.previewUrl} />
+                    <span className="organizing-photo-tile__check" aria-hidden="true">
+                      {isSelected ? '✓' : ''}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </>
         ) : (
           <div className="organizing-complete-state">
             <strong>모든 사진을 모먼트에 담았어요.</strong>

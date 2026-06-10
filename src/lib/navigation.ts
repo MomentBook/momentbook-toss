@@ -3,6 +3,7 @@ export const screens = [
   'featuredJourney',
   'featuredTimelineDetail',
   'upload',
+  'journeyBasics',
   'organizing',
   'timeline',
   'privateDraft',

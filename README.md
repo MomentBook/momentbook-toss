@@ -27,7 +27,7 @@ for MomentBook.
 - `granite.config.ts`: Apps in Toss app contract
 - `src/lib/environment.ts`: client-visible environment/server URL validation
 - `src/lib/appsInToss.ts`: bridge access wrapper for browser, sandbox, and Toss runtime
-- `src/lib/momentbook.ts`: current private draft, photo, and manual moment helpers
+- `src/lib/momentbook.ts`: private journey draft, photo, and manual moment helpers
 - `src/App.tsx`: mobile-oriented Apps in Toss flow orchestration
 
 ## Notes
@@ -37,6 +37,7 @@ for MomentBook.
 - Yarn is configured with `nodeLinker: node-modules` to keep the runtime close to the existing Vite/Granite setup and the sibling MomentBook project.
 - TDS Mobile packages are installed and should remain the first choice for mobile UI changes.
 - The launch target is Toss login based private server save. The current code
-  still simulates private draft completion and does not yet implement upload.
+  implements the 4-step UI and Toss auth boundary, but does not yet upload
+  photos or create the private journey record.
 - Public publishing, public URL creation, WebView-side Toss token exchange, and
   native-account auto-linking are intentionally out of scope.

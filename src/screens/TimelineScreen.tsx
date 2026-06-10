@@ -4,12 +4,20 @@ import { formatCount, formatMomentWindow, type JourneyDraft } from '../lib/momen
 type TimelineScreenProps = {
   draft: JourneyDraft
   onChangePhotos: () => void
+  onEditJourneyBasics: () => void
   onEditMoments: () => void
 }
 
-export function TimelineScreen({ draft, onChangePhotos, onEditMoments }: TimelineScreenProps) {
-  const photoCount = draft.timeline.reduce((total, moment) => total + moment.photos.length, 0)
-  const timelineLabel = `${formatCount(photoCount, '장')} · ${formatCount(draft.timeline.length, '개 모먼트')}`
+export function TimelineScreen({
+  draft,
+  onChangePhotos,
+  onEditJourneyBasics,
+  onEditMoments,
+}: TimelineScreenProps) {
+  const timelinePhotoCount = draft.timeline.reduce((total, moment) => total + moment.photos.length, 0)
+  const unassignedPhotoCount = draft.unassignedPhotos.length
+  const totalPhotoCount = timelinePhotoCount + unassignedPhotoCount
+  const timelineLabel = `${formatCount(timelinePhotoCount, '장')} · ${formatCount(draft.timeline.length, '개 모먼트')}`
 
   return (
     <>
@@ -22,20 +30,23 @@ export function TimelineScreen({ draft, onChangePhotos, onEditMoments }: Timelin
             <div className="timeline-hero__overlay" />
 
             <div className="timeline-hero__content">
-              <span className="section-badge section-badge--glass">비공개 초안 미리보기</span>
+              <span className="section-badge section-badge--glass">4/4 저장 전 확인</span>
               <h2>{draft.title}</h2>
               <p>{draft.subtitle}</p>
 
               <div className="timeline-hero__chips">
-                <span className="timeline-hero__chip">{formatCount(photoCount, '장')}</span>
+                <span className="timeline-hero__chip">{formatCount(totalPhotoCount, '장 선택')}</span>
                 <span className="timeline-hero__chip">{formatCount(draft.timeline.length, '개 모먼트')}</span>
+                {unassignedPhotoCount > 0 ? (
+                  <span className="timeline-hero__chip">{formatCount(unassignedPhotoCount, '장 미정리')}</span>
+                ) : null}
                 <span className="timeline-hero__chip">비공개</span>
               </div>
             </div>
           </div>
         ) : (
           <div className="hero-card__content">
-            <span className="section-badge section-badge--primary">비공개 초안 미리보기</span>
+            <span className="section-badge section-badge--primary">4/4 저장 전 확인</span>
             <h2 className="hero-card__title">{draft.title}</h2>
             <p className="hero-card__description">{draft.subtitle}</p>
           </div>
@@ -101,6 +112,37 @@ export function TimelineScreen({ draft, onChangePhotos, onEditMoments }: Timelin
         </div>
       </section>
 
+      {unassignedPhotoCount > 0 ? (
+        <section className="panel-card unassigned-review-card">
+          <div className="section-heading section-heading--compact">
+            <div>
+              <p className="section-heading__eyebrow">미정리 사진</p>
+              <h3>함께 저장돼요</h3>
+            </div>
+
+            <span className="stat-pill">{formatCount(unassignedPhotoCount, '장')}</span>
+          </div>
+
+          <p className="helper-copy">
+            타임라인에는 모먼트만 먼저 보이고, 미정리 사진은 비공개 저장 데이터에 포함돼요.
+          </p>
+
+          <div className="unassigned-review-strip" aria-label="함께 저장될 미정리 사진">
+            {draft.unassignedPhotos.slice(0, 6).map((photo, index) => (
+              <figure className="unassigned-review-photo" key={photo.id}>
+                <img alt={`미정리 사진 ${index + 1}`} loading="lazy" src={photo.previewUrl} />
+              </figure>
+            ))}
+
+            {unassignedPhotoCount > 6 ? (
+              <div className="unassigned-review-more" aria-label={`추가 미정리 사진 ${unassignedPhotoCount - 6}장`}>
+                +{unassignedPhotoCount - 6}
+              </div>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
       <section className="panel-card panel-card--muted">
         <div className="section-heading section-heading--compact">
           <div>
@@ -110,8 +152,12 @@ export function TimelineScreen({ draft, onChangePhotos, onEditMoments }: Timelin
         </div>
 
         <div className="timeline-actions">
+          <Button display="full" size="large" variant="weak" onClick={onEditJourneyBasics}>
+            여정 정보 수정하기
+          </Button>
+
           <Button display="full" size="large" variant="weak" onClick={onEditMoments}>
-            여정과 모먼트 수정하기
+            모먼트 수정하기
           </Button>
 
           <button className="timeline-text-action" type="button" onClick={onChangePhotos}>

@@ -2410,7 +2410,7 @@
   }
 }
 
-/* Final pass: remaining organizing, private draft review, and guided chrome states. */
+/* Final pass: remaining organizing, private save review, and guided chrome states. */
 .app-chrome > div:first-child {
   min-width: 0;
 }
@@ -2419,9 +2419,21 @@
   max-width: 28rem;
 }
 
+.journey-basics-hero .feature-chips {
+  margin-top: 2px;
+}
+
+.journey-basics-editor,
+.journey-basics-photos,
 .journey-editor-card {
   display: grid;
   gap: 18px;
+}
+
+.journey-basics-photo-actions {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
 }
 
 .journey-editor-layout {
@@ -2482,6 +2494,30 @@
   min-width: 72px;
 }
 
+.moment-add-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--app-accent-soft);
+  color: var(--app-accent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.moment-add-button:focus-visible {
+  outline: 2px solid rgba(47, 143, 107, 0.28);
+  outline-offset: 4px;
+}
+
+.unassigned-save-note {
+  margin: 0 0 14px;
+  color: var(--app-ink-soft);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .moment-photo-grid--artifact {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-auto-flow: dense;
@@ -2518,10 +2554,62 @@
     var(--app-surface-muted);
 }
 
+.unassigned-review-card {
+  display: grid;
+  gap: 14px;
+}
+
+.unassigned-review-strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(72px, 88px);
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.unassigned-review-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.unassigned-review-photo,
+.unassigned-review-more {
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  background: #f1f4f7;
+}
+
+.unassigned-review-photo {
+  margin: 0;
+}
+
+.unassigned-review-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.unassigned-review-more {
+  display: grid;
+  place-items: center;
+  color: var(--app-accent);
+  font-size: 18px;
+  font-weight: 800;
+}
+
 .publish-review-stats {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
+}
+
+.publish-note--error {
+  border-color: rgba(209, 67, 67, 0.16);
+  background: #fff6f5;
+  color: #b42318;
 }
 
 .upload-state--loading,

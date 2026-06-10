@@ -17,9 +17,11 @@ import {
   FetchAlbumPhotosPermissionError,
   fetchMomentbookAlbumPhotos,
   getRuntimeEnvironment,
+  requestTossAppLogin,
   triggerSuccessHaptic,
   type RuntimeEnvironment,
 } from './lib/appsInToss'
+import { authenticateWithTossAuthorization } from './lib/momentbookApi'
 import {
   buildHistoryState,
   getRequestedFeaturedJourneyId,
@@ -32,7 +34,6 @@ import {
   buildJourneyDraft,
   createDefaultJourneyDetails,
   createEmptyJourneyMoments,
-  getUnassignedPhotos,
   readBrowserPhotoFiles,
   normalizeTossAlbumPhotos,
   type JourneyDraft,
@@ -43,12 +44,13 @@ import {
 import { DiscoverScreen } from './screens/DiscoverScreen'
 import { FeaturedJourneyScreen } from './screens/FeaturedJourneyScreen'
 import { FeaturedTimelineDetailScreen } from './screens/FeaturedTimelineDetailScreen'
+import { JourneyBasicsScreen } from './screens/JourneyBasicsScreen'
 import { OrganizingScreen } from './screens/OrganizingScreen'
 import { PrivateDraftScreen } from './screens/PrivateDraftScreen'
 import { TimelineScreen } from './screens/TimelineScreen'
 import { UploadScreen } from './screens/UploadScreen'
 
-type PrivateDraftStatus = 'idle' | 'saving' | 'complete'
+type PrivateDraftStatus = 'idle' | 'authenticating' | 'saving' | 'failed' | 'complete'
 type PhotoSelectionStatus = 'idle' | 'loading'
 
 type FlowState = {
@@ -57,6 +59,7 @@ type FlowState = {
   moments: JourneyMoment[]
   draft: JourneyDraft | null
   privateDraftStatus: PrivateDraftStatus
+  privateDraftErrorMessage: string | null
   photoSelectionStatus: PhotoSelectionStatus
   photoSelectionErrorMessage: string | null
 }
@@ -70,8 +73,10 @@ type FlowAction =
   | { type: 'journeyDetailsUpdated'; details: JourneyDetails }
   | { type: 'momentsUpdated'; moments: JourneyMoment[] }
   | { type: 'draftGenerated'; draft: JourneyDraft }
+  | { type: 'privateDraftAuthStarted' }
   | { type: 'privateDraftSaveStarted' }
   | { type: 'privateDraftSaveCompleted' }
+  | { type: 'privateDraftSaveFailed'; message: string }
   | { type: 'resetAll' }
 
 const runtimeCopy: Record<
@@ -118,17 +123,21 @@ const screenMeta: Record<
     label: '사진 업로드',
     description: '사진을 선택해요.',
   },
+  journeyBasics: {
+    label: '여정 정보',
+    description: '제목, 설명, 대표 사진만 먼저 정해요.',
+  },
   organizing: {
-    label: '비공개 여정 구성',
-    description: '사진과 문장을 직접 골라 여정의 흐름을 만들어 보세요.',
+    label: '모먼트 정리',
+    description: '보여줄 장면만 모먼트로 묶고, 남은 사진은 함께 저장해요.',
   },
   timeline: {
-    label: '타임라인 확인',
-    description: '직접 구성한 비공개 여정 초안을 미리 봐요.',
+    label: '저장 전 확인',
+    description: '직접 구성한 비공개 여정의 저장 전 모습을 확인해요.',
   },
   privateDraft: {
     label: '비공개 저장',
-    description: '토스 안에서는 공개 없이 초안만 완성해요.',
+    description: 'Toss 로그인 후 서버에 비공개로 저장해요.',
   },
 }
 
@@ -138,6 +147,7 @@ const initialFlowState: FlowState = {
   moments: [],
   draft: null,
   privateDraftStatus: 'idle',
+  privateDraftErrorMessage: null,
   photoSelectionStatus: 'idle',
   photoSelectionErrorMessage: null,
 }
@@ -156,6 +166,7 @@ function clearDraftState(state: FlowState): FlowState {
     ...state,
     draft: null,
     privateDraftStatus: 'idle',
+    privateDraftErrorMessage: null,
     photoSelectionStatus: 'idle',
     photoSelectionErrorMessage: null,
   }
@@ -199,7 +210,7 @@ function resolveAccessibleScreen(
     return 'upload'
   }
 
-  if (requested === 'organizing') {
+  if (requested === 'journeyBasics' || requested === 'organizing') {
     return state.photos.length > 0 ? requested : 'upload'
   }
 
@@ -249,15 +260,29 @@ function reducer(state: FlowState, action: FlowAction): FlowState {
       }
     case 'draftGenerated':
       return buildDraftGeneratedState(state, action.draft)
+    case 'privateDraftAuthStarted':
+      return {
+        ...state,
+        privateDraftStatus: 'authenticating',
+        privateDraftErrorMessage: null,
+      }
     case 'privateDraftSaveStarted':
       return {
         ...state,
         privateDraftStatus: 'saving',
+        privateDraftErrorMessage: null,
       }
     case 'privateDraftSaveCompleted':
       return {
         ...state,
         privateDraftStatus: 'complete',
+        privateDraftErrorMessage: null,
+      }
+    case 'privateDraftSaveFailed':
+      return {
+        ...state,
+        privateDraftStatus: 'failed',
+        privateDraftErrorMessage: action.message,
       }
     case 'resetAll':
       return initialFlowState
@@ -280,7 +305,7 @@ function App() {
   )
   const [screen, setScreen] = useState<Screen>(() =>
     resolveAccessibleScreen(
-      getRequestedScreen(window.location.hash, window.history.state) ?? 'discover',
+      getRequestedScreen(window.location.hash, window.history.state) ?? 'upload',
       initialFlowState,
       initialFeaturedJourneyId,
       initialFeaturedJourneyMomentId,
@@ -351,7 +376,7 @@ function App() {
 
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
-      const requestedScreen = getRequestedScreen(window.location.hash, event.state) ?? 'discover'
+      const requestedScreen = getRequestedScreen(window.location.hash, event.state) ?? 'upload'
       const nextFeaturedJourneyId = getRequestedFeaturedJourneyId(event.state)
       const nextFeaturedJourneyMomentId = getRequestedFeaturedJourneyMomentId(event.state)
       const nextScreen = resolveAccessibleScreen(
@@ -374,22 +399,6 @@ function App() {
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
   }, [flow])
-
-  useEffect(() => {
-    if (flow.privateDraftStatus !== 'saving') {
-      return
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      startTransition(() => {
-        dispatch({ type: 'privateDraftSaveCompleted' })
-      })
-
-      void triggerSuccessHaptic()
-    }, 900)
-
-    return () => window.clearTimeout(timeoutId)
-  }, [flow.privateDraftStatus])
 
   const completePhotoSelection = useCallback(
     (photos: PhotoAsset[]) => {
@@ -461,6 +470,17 @@ function App() {
     const nextFlow = clearDraftState(flow)
 
     dispatch({ type: 'draftCleared' })
+    navigate('journeyBasics', 'push', nextFlow)
+  }, [flow, navigate])
+
+  const handleStartMomentCompose = useCallback(() => {
+    if (flow.photos.length === 0 || flow.photoSelectionStatus === 'loading') {
+      return
+    }
+
+    const nextFlow = clearDraftState(flow)
+
+    dispatch({ type: 'draftCleared' })
     navigate('organizing', 'push', nextFlow)
   }, [flow, navigate])
 
@@ -483,12 +503,6 @@ function App() {
       return
     }
 
-    const unassignedPhotos = getUnassignedPhotos(flow.photos, flow.moments)
-
-    if (unassignedPhotos.length > 0) {
-      return
-    }
-
     const draft = buildJourneyDraft(flow.photos, flow.moments, flow.details)
     const nextFlow = buildDraftGeneratedState(flow, draft)
 
@@ -508,18 +522,48 @@ function App() {
     navigate('privateDraft', 'push')
   }, [flow.draft, navigate])
 
-  const handleSavePrivateDraft = useCallback(() => {
-    if (flow.draft == null || flow.privateDraftStatus !== 'idle') {
+  const handleSavePrivateDraft = useCallback(async () => {
+    if (
+      flow.draft == null ||
+      flow.privateDraftStatus === 'authenticating' ||
+      flow.privateDraftStatus === 'saving' ||
+      flow.privateDraftStatus === 'complete'
+    ) {
       return
     }
 
-    dispatch({ type: 'privateDraftSaveStarted' })
-  }, [flow.draft, flow.privateDraftStatus])
+    dispatch({ type: 'privateDraftAuthStarted' })
+
+    try {
+      const loginResult = await requestTossAppLogin()
+
+      dispatch({ type: 'privateDraftSaveStarted' })
+      await authenticateWithTossAuthorization(loginResult)
+
+      throw new Error(
+        'Toss 로그인은 확인했지만 비공개 여정 저장 API 계약이 아직 연결되지 않았어요.',
+      )
+    } catch (error) {
+      const message = getPrivateDraftSaveMessage(error)
+
+      dispatch({ type: 'privateDraftSaveFailed', message })
+      toast.openToast(message, {
+        higherThanCTA: true,
+      })
+    }
+  }, [flow.draft, flow.privateDraftStatus, toast])
 
   const handleRestart = useCallback(() => {
     dispatch({ type: 'resetAll' })
-    navigate('discover', 'replace', initialFlowState)
+    navigate('upload', 'replace', initialFlowState)
   }, [navigate])
+
+  const handleEditJourneyBasics = useCallback(() => {
+    const nextFlow = clearDraftState(flow)
+
+    dispatch({ type: 'draftCleared' })
+    navigate('journeyBasics', 'push', nextFlow)
+  }, [flow, navigate])
 
   const handleEditMoments = useCallback(() => {
     const nextFlow = clearDraftState(flow)
@@ -571,7 +615,6 @@ function App() {
     selectedFeaturedJourneyMomentId,
   )
   const copy = runtimeCopy[runtime]
-  const unassignedPhotoCount = getUnassignedPhotos(flow.photos, flow.moments).length
   const hasGroupedMoment = flow.moments.some((moment) => moment.photos.length > 0)
   const shouldShowChrome =
     screen !== 'upload' &&
@@ -626,13 +669,23 @@ function App() {
         />
       )
       break
+    case 'journeyBasics':
+      content = (
+        <JourneyBasicsScreen
+          details={flow.details}
+          isPickingPhotos={flow.photoSelectionStatus === 'loading'}
+          photos={flow.photos}
+          selectionErrorMessage={flow.photoSelectionErrorMessage}
+          onChangeDetails={handleJourneyDetailsUpdated}
+          onPickPhotos={() => void handlePickPhotos()}
+        />
+      )
+      break
     case 'organizing':
       content = (
         <OrganizingScreen
-          details={flow.details}
           moments={flow.moments}
           photos={flow.photos}
-          onChangeDetails={handleJourneyDetailsUpdated}
           onChangeMoments={handleMomentsUpdated}
         />
       )
@@ -643,6 +696,7 @@ function App() {
           <TimelineScreen
             draft={currentDraft}
             onChangePhotos={() => void handlePickPhotos()}
+            onEditJourneyBasics={handleEditJourneyBasics}
             onEditMoments={handleEditMoments}
           />
         )
@@ -652,6 +706,7 @@ function App() {
         currentDraft == null ? null : (
           <PrivateDraftScreen
             draft={currentDraft}
+            saveErrorMessage={flow.privateDraftErrorMessage}
             saveStatus={flow.privateDraftStatus}
             onBackToTimeline={() => navigate('timeline', 'replace')}
           />
@@ -693,23 +748,33 @@ function App() {
           disabled={flow.photos.length === 0 || flow.photoSelectionStatus === 'loading'}
           onClick={handleStartOrganizing}
         >
-          여정 정리하기
+          여정 정보 입력하기
+        </FixedBottomCTA>
+      ) : null}
+
+      {screen === 'journeyBasics' ? (
+        <FixedBottomCTA
+          hideOnScroll
+          disabled={flow.photos.length === 0 || flow.photoSelectionStatus === 'loading'}
+          onClick={handleStartMomentCompose}
+        >
+          모먼트 정리하기
         </FixedBottomCTA>
       ) : null}
 
       {screen === 'organizing' ? (
         <FixedBottomCTA
           hideOnScroll
-          disabled={!hasGroupedMoment || unassignedPhotoCount > 0}
+          disabled={!hasGroupedMoment}
           onClick={handlePreviewTimeline}
         >
-          타임라인 보기
+          타임라인 확인하기
         </FixedBottomCTA>
       ) : null}
 
       {screen === 'timeline' ? (
         <FixedBottomCTA hideOnScroll disabled={currentDraft == null} onClick={handleOpenPrivateDraft}>
-          비공개로 저장하기
+          저장 전 확인하기
         </FixedBottomCTA>
       ) : null}
 
@@ -721,11 +786,18 @@ function App() {
         ) : (
           <FixedBottomCTA
             hideOnScroll
-            disabled={currentDraft == null || flow.privateDraftStatus === 'saving'}
-            loading={flow.privateDraftStatus === 'saving'}
-            onClick={handleSavePrivateDraft}
+            disabled={
+              currentDraft == null ||
+              flow.privateDraftStatus === 'authenticating' ||
+              flow.privateDraftStatus === 'saving'
+            }
+            loading={
+              flow.privateDraftStatus === 'authenticating' ||
+              flow.privateDraftStatus === 'saving'
+            }
+            onClick={() => void handleSavePrivateDraft()}
           >
-            완료하기
+            Toss 로그인하고 저장하기
           </FixedBottomCTA>
         )
       ) : null}
@@ -752,6 +824,14 @@ function getPhotoSelectionMessage(error: unknown) {
   }
 
   return '사진을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'
+}
+
+function getPrivateDraftSaveMessage(error: unknown) {
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message
+  }
+
+  return '비공개 저장을 시작하지 못했어요. 잠시 후 다시 시도해 주세요.'
 }
 
 export default App

@@ -40,13 +40,14 @@ export type JourneyDraft = {
   visibility: 'private'
   coverPhoto: PhotoAsset | null
   timeline: JourneyMoment[]
+  unassignedPhotos: PhotoAsset[]
 }
 
 type BuildJourneyDraftOptions = {
   webBaseUrl?: string
 }
 
-const momentTitles = ['모먼트 1', '모먼트 2', '모먼트 3', '모먼트 4']
+const defaultMomentTitles = ['모먼트 1', '모먼트 2', '모먼트 3']
 
 export async function readBrowserPhotoFiles(files: File[]): Promise<PhotoAsset[]> {
   return await Promise.all(
@@ -83,14 +84,20 @@ export function normalizeTossAlbumPhotos(albumPhotos: TossAlbumPhoto[]): PhotoAs
 }
 
 export function createEmptyJourneyMoments(): JourneyMoment[] {
-  return momentTitles.map((title, index) => ({
-    id: `moment-${index + 1}`,
-    title,
+  return defaultMomentTitles.map((_, index) => createJourneyMoment(index))
+}
+
+export function createJourneyMoment(index: number): JourneyMoment {
+  const momentNumber = index + 1
+
+  return {
+    id: `moment-${momentNumber}`,
+    title: defaultMomentTitles[index] ?? `모먼트 ${momentNumber}`,
     summary: '',
     startedAt: null,
     endedAt: null,
     photos: [],
-  }))
+  }
 }
 
 export function createDefaultJourneyDetails(photos: PhotoAsset[]): JourneyDetails {
@@ -183,13 +190,14 @@ export function buildJourneyDraft(
     .map((moment, index, filteredMoments) => ({
       ...moment,
       id: `moment-${index + 1}`,
-      title: moment.title.trim() || momentTitles[index] || `모먼트 ${index + 1}`,
+      title: moment.title.trim() || defaultMomentTitles[index] || `모먼트 ${index + 1}`,
       summary:
         moment.summary.trim() ||
         buildMomentSummary(moment.photos.length, index, filteredMoments.length),
       startedAt: null,
       endedAt: null,
     }))
+  const unassignedPhotos = getUnassignedPhotos(photos, moments)
   const slug = buildJourneySlug(photos)
   const previewPath = `/private/journeys/${slug}`
   const coverPhoto =
@@ -197,18 +205,19 @@ export function buildJourneyDraft(
 
   return {
     id: `journey-${slug}`,
-    title: normalizedTitle || (photos.length === 0 ? '비어 있는 여정' : '비공개 여정 초안'),
+    title: normalizedTitle || (photos.length === 0 ? '비어 있는 여정' : '비공개 여정'),
     subtitle:
       normalizedDescription ||
       (timeline.length === 0
         ? '사진을 모먼트에 담아 여정의 흐름을 만들어 보세요.'
-        : `${photos.length}장의 사진을 ${timeline.length}개의 모먼트로 정리했어요.`),
+        : `${photos.length}장의 사진 중 ${timeline.length}개의 모먼트를 먼저 정리했어요.`),
     slug,
     previewPath,
     previewUrl: buildPreviewUrl(previewPath, options.webBaseUrl),
     visibility: 'private',
     coverPhoto,
     timeline,
+    unassignedPhotos,
   }
 }
 
