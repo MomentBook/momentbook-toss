@@ -14,6 +14,8 @@ export function FeaturedJourneyScreen({
   onBack,
   onOpenTimeline,
 }: FeaturedJourneyScreenProps) {
+  const momentCountLabel = formatCount(journey.moments.length, '개 모먼트')
+
   return (
     <div className="featured-journey">
       <section className="featured-journey__hero">
@@ -50,12 +52,14 @@ export function FeaturedJourneyScreen({
         </div>
       </section>
 
-      <section className="panel-card panel-card--muted featured-journey__intro">
+      <section className="featured-journey__intro">
         <div className="section-heading section-heading--compact">
           <div>
             <p className="section-heading__eyebrow">모먼트</p>
             <h3>장면이 이어지는 흐름</h3>
           </div>
+
+          <span className="stat-pill">{momentCountLabel}</span>
         </div>
 
         <p className="featured-journey__intro-copy">{journey.tone}</p>
@@ -74,6 +78,38 @@ export function FeaturedJourneyScreen({
               type="button"
               onClick={() => onOpenTimeline(moment.id)}
             >
+              {previewPhotos.length > 0 ? (
+                <div className="featured-journey__timeline-media">
+                  <figure className="featured-journey__timeline-lead-photo">
+                    <img
+                      alt={previewPhotos[0].alt}
+                      loading="lazy"
+                      src={previewPhotos[0].previewUrl}
+                    />
+                  </figure>
+
+                  {previewPhotos.length > 1 ? (
+                    <div className="featured-journey__timeline-strip">
+                      {previewPhotos.slice(1).map((photo, photoIndex, stripPhotos) => (
+                        <figure className="featured-journey__timeline-photo" key={photo.id}>
+                          <img
+                            alt={photo.alt}
+                            loading="lazy"
+                            src={photo.previewUrl}
+                          />
+
+                          {photoIndex === stripPhotos.length - 1 && hiddenPhotoCount > 0 ? (
+                            <div className="featured-journey__timeline-overlay">
+                              <span>+{hiddenPhotoCount}</span>
+                            </div>
+                          ) : null}
+                        </figure>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
               <div className="featured-journey__timeline-head">
                 <div>
                   <div className="featured-journey__timeline-track">
@@ -92,23 +128,7 @@ export function FeaturedJourneyScreen({
               <p className="featured-journey__timeline-summary">{moment.summary}</p>
               <p className="featured-journey__timeline-date">{moment.dateLabel}</p>
 
-              <div className="featured-journey__timeline-grid">
-                {previewPhotos.map((photo, photoIndex) => (
-                  <figure className="featured-journey__timeline-photo" key={photo.id}>
-                    <img
-                      alt={photo.alt}
-                      loading="lazy"
-                      src={photo.previewUrl}
-                    />
-
-                    {photoIndex === previewPhotos.length - 1 && hiddenPhotoCount > 0 ? (
-                      <div className="featured-journey__timeline-overlay">
-                        <span>+{hiddenPhotoCount}</span>
-                      </div>
-                    ) : null}
-                  </figure>
-                ))}
-              </div>
+              <span className="featured-journey__timeline-action">장면 자세히 보기</span>
             </button>
           )
         })}

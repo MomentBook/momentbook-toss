@@ -34,17 +34,22 @@ export function FeaturedTimelineDetailScreen({
         <span className="app-pill">Moment {String(momentIndex + 1).padStart(2, '0')}</span>
       </div>
 
-      <section className="panel-card featured-timeline-detail__intro">
-        <span className="feature-chip">{moment.dateLabel}</span>
-        <h2>{moment.title}</h2>
-        <p>{moment.summary}</p>
-      </section>
-
       {leadPhoto != null ? (
         <figure className="featured-timeline-detail__lead">
           <img alt={leadPhoto.alt} src={leadPhoto.previewUrl} />
+          <figcaption className="featured-timeline-detail__lead-copy">
+            <span>{moment.dateLabel}</span>
+            <h2>{moment.title}</h2>
+            <p>{moment.summary}</p>
+          </figcaption>
         </figure>
-      ) : null}
+      ) : (
+        <section className="panel-card featured-timeline-detail__intro">
+          <span className="feature-chip">{moment.dateLabel}</span>
+          <h2>{moment.title}</h2>
+          <p>{moment.summary}</p>
+        </section>
+      )}
 
       {secondaryPhotos.length > 0 ? (
         <section className="featured-timeline-detail__grid">
@@ -56,7 +61,7 @@ export function FeaturedTimelineDetailScreen({
         </section>
       ) : null}
 
-      <section className="panel-card featured-timeline-detail__note">
+      <section className="featured-timeline-detail__note">
         <p className="section-heading__eyebrow">메모</p>
         <p>{moment.note}</p>
       </section>

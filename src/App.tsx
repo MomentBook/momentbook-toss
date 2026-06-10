@@ -669,6 +669,7 @@ function App() {
             <div>
               <p className="app-chrome__eyebrow">MomentBook</p>
               <h1 className="app-chrome__title">{screenMeta[screen].label}</h1>
+              <p className="app-chrome__description">{screenMeta[screen].description}</p>
             </div>
 
             <div className="app-chrome__meta">

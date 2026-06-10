@@ -9,6 +9,7 @@ type TimelineScreenProps = {
 
 export function TimelineScreen({ draft, onChangePhotos, onEditMoments }: TimelineScreenProps) {
   const photoCount = draft.timeline.reduce((total, moment) => total + moment.photos.length, 0)
+  const timelineLabel = `${formatCount(photoCount, '장')} · ${formatCount(draft.timeline.length, '개 모먼트')}`
 
   return (
     <>
@@ -41,41 +42,62 @@ export function TimelineScreen({ draft, onChangePhotos, onEditMoments }: Timelin
         )}
       </section>
 
-      <section className="panel-card">
-        <div className="section-heading">
+      <section className="timeline-section">
+        <div className="section-heading timeline-section__heading">
           <div>
             <p className="section-heading__eyebrow">타임라인</p>
             <h3>이 흐름으로 저장돼요</h3>
           </div>
+
+          <span className="stat-pill">{timelineLabel}</span>
         </div>
 
         <div className="timeline-stack">
-          {draft.timeline.map((moment, index) => (
-            <article className="timeline-card" key={moment.id}>
-              <div className="timeline-card-head">
-                <div>
-                  <p className="eyebrow">Moment {String(index + 1).padStart(2, '0')}</p>
-                  <h3>{moment.title}</h3>
-                </div>
-                <span className="stat-pill">{formatCount(moment.photos.length, '장')}</span>
-              </div>
+          {draft.timeline.map((moment, index) => {
+            const leadPhoto = moment.photos[0] ?? null
+            const stripPhotos = moment.photos.slice(1, 5)
 
-              <p className="timeline-summary">{moment.summary}</p>
-              <p className="timeline-meta">{formatMomentWindow(moment)}</p>
-
-              <div className="timeline-preview-grid">
-                {moment.photos.slice(0, 4).map((photo, photoIndex) => (
-                  <figure className="timeline-preview" key={`${moment.id}-${photo.id}`}>
+            return (
+              <article className="timeline-card" key={moment.id}>
+                {leadPhoto != null ? (
+                  <figure className="timeline-card__lead">
                     <img
-                      src={photo.previewUrl}
-                      alt={`${moment.title} 사진 ${photoIndex + 1}`}
+                      src={leadPhoto.previewUrl}
+                      alt={`${moment.title} 대표 사진`}
                       loading="lazy"
                     />
                   </figure>
-                ))}
-              </div>
-            </article>
-          ))}
+                ) : null}
+
+                <div className="timeline-card__body">
+                  <div className="timeline-card-head">
+                    <div>
+                      <p className="eyebrow">Moment {String(index + 1).padStart(2, '0')}</p>
+                      <h3>{moment.title}</h3>
+                    </div>
+                    <span className="stat-pill">{formatCount(moment.photos.length, '장')}</span>
+                  </div>
+
+                  <p className="timeline-summary">{moment.summary}</p>
+                  <p className="timeline-meta">{formatMomentWindow(moment)}</p>
+
+                  {stripPhotos.length > 0 ? (
+                    <div className="timeline-preview-grid" aria-label={`${moment.title} 보조 사진`}>
+                      {stripPhotos.map((photo, photoIndex) => (
+                        <figure className="timeline-preview" key={`${moment.id}-${photo.id}`}>
+                          <img
+                            src={photo.previewUrl}
+                            alt={`${moment.title} 사진 ${photoIndex + 2}`}
+                            loading="lazy"
+                          />
+                        </figure>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </article>
+            )
+          })}
         </div>
       </section>
 

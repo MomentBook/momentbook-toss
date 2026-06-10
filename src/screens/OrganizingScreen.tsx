@@ -44,6 +44,9 @@ export function OrganizingScreen({
     : moments[0]?.id ?? ''
   const activeMoment = moments.find((moment) => moment.id === resolvedActiveMomentId) ?? moments[0] ?? null
   const selectedCount = selectedPhotoIdsInTray.length
+  const assignedPhotoCount = photos.length - unassignedPhotos.length
+  const groupedPercent = photos.length === 0 ? 0 : Math.round((assignedPhotoCount / photos.length) * 100)
+  const coverPhoto = photos.find((photo) => photo.id === details.coverPhotoId) ?? photos[0] ?? null
 
   const handleJourneyTitleChange = (event: ChangeEvent<HTMLInputElement>) => {
     onChangeDetails({
@@ -160,15 +163,28 @@ export function OrganizingScreen({
 
   return (
     <>
-      <section className="hero-card">
+      <section className="hero-card hero-card--organizing">
         <div className="hero-card__content">
           <span className="section-badge section-badge--primary">비공개 구성</span>
           <h2 className="hero-card__title">여정의 흐름을 정리하세요</h2>
           <p className="hero-card__description">사진을 모먼트에 나누고 필요한 메모만 남겨요.</p>
+
+          <div
+            className="organizing-progress"
+            aria-label={`전체 사진 ${photos.length}장 중 ${assignedPhotoCount}장을 모먼트에 담았어요`}
+          >
+            <div className="progress-summary">
+              <span>모먼트에 담은 사진</span>
+              <strong>{assignedPhotoCount}/{photos.length}장</strong>
+            </div>
+            <div className="progress-bar" aria-hidden="true">
+              <span style={{ width: `${groupedPercent}%` }} />
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="panel-card">
+      <section className="panel-card journey-editor-card">
         <div className="section-heading">
           <div>
             <p className="section-heading__eyebrow">여정 정보</p>
@@ -176,30 +192,39 @@ export function OrganizingScreen({
           </div>
         </div>
 
-        <div className="journey-editor-form">
-          <TextField
-            label="여정 제목"
-            labelOption="sustain"
-            maxLength={60}
-            placeholder="예: 제주에서 천천히 걸은 주말"
-            value={details.title}
-            variant="box"
-            onChange={handleJourneyTitleChange}
-          />
+        <div className="journey-editor-layout">
+          <div className="journey-editor-form">
+            <TextField
+              label="여정 제목"
+              labelOption="sustain"
+              maxLength={60}
+              placeholder="예: 제주에서 천천히 걸은 주말"
+              value={details.title}
+              variant="box"
+              onChange={handleJourneyTitleChange}
+            />
 
-          <TextArea
-            label="여정 설명"
-            labelOption="sustain"
-            maxLength={180}
-            minHeight={96}
-            placeholder="이 여정에서 기억하고 싶은 분위기를 짧게 적어주세요."
-            value={details.description}
-            variant="box"
-            onChange={handleJourneyDescriptionChange}
-          />
+            <TextArea
+              label="여정 설명"
+              labelOption="sustain"
+              maxLength={180}
+              minHeight={96}
+              placeholder="이 여정에서 기억하고 싶은 분위기를 짧게 적어주세요."
+              value={details.description}
+              variant="box"
+              onChange={handleJourneyDescriptionChange}
+            />
+          </div>
+
+          {coverPhoto != null ? (
+            <figure className="cover-preview">
+              <img alt="선택한 대표 사진 미리보기" loading="lazy" src={coverPhoto.previewUrl} />
+              <figcaption>대표 사진</figcaption>
+            </figure>
+          ) : null}
         </div>
 
-        <div className="cover-picker" aria-label="대표 사진 선택">
+        <div className="cover-picker cover-picker--strip" aria-label="대표 사진 선택">
           {photos.slice(0, 8).map((photo, index) => {
             const isSelected = details.coverPhotoId === photo.id
 
@@ -314,9 +339,12 @@ export function OrganizingScreen({
             </div>
 
             {activeMoment.photos.length > 0 ? (
-              <div className="moment-photo-grid" aria-label={`${activeMoment.title}에 담긴 사진`}>
+              <div className="moment-photo-grid moment-photo-grid--artifact" aria-label={`${activeMoment.title}에 담긴 사진`}>
                 {activeMoment.photos.map((photo, index) => (
-                  <figure className="moment-photo-card" key={`${activeMoment.id}-${photo.id}`}>
+                  <figure
+                    className={`moment-photo-card${index === 0 ? ' moment-photo-card--lead' : ''}`}
+                    key={`${activeMoment.id}-${photo.id}`}
+                  >
                     <img alt={`${activeMoment.title} 사진 ${index + 1}`} loading="lazy" src={photo.previewUrl} />
                     <button
                       aria-label={`${activeMoment.title}에서 사진 ${index + 1} 빼기`}

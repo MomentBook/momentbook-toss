@@ -6,13 +6,26 @@ type DiscoverScreenProps = {
 }
 
 export function DiscoverScreen({ onOpenJourney }: DiscoverScreenProps) {
+  const heroJourney = featuredJourneys[0]
+
   return (
     <div className="discover-screen">
-      <section className="hero-card">
-        <div className="hero-card__content">
-          <p className="section-heading__eyebrow">MomentBook</p>
-          <h2 className="hero-card__title">당신의 순간을 기억하세요</h2>
-          <p className="hero-card__description">사진이 모먼트로 정리되면 여행의 흐름이 다시 보입니다.</p>
+      <section className="discover-hero" aria-labelledby="discover-hero-title">
+        <div className="discover-hero__media">
+          <img alt={heroJourney.coverPhoto.alt} src={heroJourney.coverPhoto.previewUrl} />
+        </div>
+        <div className="discover-hero__scrim" />
+
+        <div className="discover-hero__content">
+          <p className="discover-hero__brand">MomentBook</p>
+          <h2 id="discover-hero-title">순간이 여정으로 보이게</h2>
+          <p>사진이 모먼트로 정리되면 여행의 흐름이 조용히 다시 보입니다.</p>
+
+          <div className="discover-hero__meta" aria-label={`${heroJourney.title} 대표 여정 정보`}>
+            <span>{heroJourney.location}</span>
+            <span>{heroJourney.duration}</span>
+            <span>{formatCount(heroJourney.photoCount, '장')}</span>
+          </div>
         </div>
       </section>
 
@@ -20,7 +33,7 @@ export function DiscoverScreen({ onOpenJourney }: DiscoverScreenProps) {
         <div className="section-heading">
           <div>
             <p className="section-heading__eyebrow">공개 여정</p>
-            <h3 id="discover-list-title">여정 예시</h3>
+            <h3 id="discover-list-title">완성된 흐름 먼저 보기</h3>
           </div>
         </div>
 

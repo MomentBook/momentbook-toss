@@ -16,16 +16,22 @@ export function PrivateDraftScreen({
 
   return saveStatus === 'complete' ? (
     <>
-      <section className="hero-card">
+      <section className="hero-card private-draft-hero">
         <div className="hero-card__content">
           <span className="section-badge section-badge--success">완료</span>
           <h2 className="hero-card__title">비공개 여정 초안을 만들었어요</h2>
           <p className="hero-card__description">서버 업로드나 공개 URL은 만들지 않았어요.</p>
         </div>
+
+        {draft.coverPhoto != null ? (
+          <figure className="private-draft-hero__cover">
+            <img src={draft.coverPhoto.previewUrl} alt={`${draft.title} 대표 사진`} loading="lazy" />
+          </figure>
+        ) : null}
       </section>
 
       <section className="panel-card">
-        <div className="publish-success-card">
+        <div className="publish-success-card private-draft-receipt">
           <span className="path-chip">Private draft</span>
           <h3>{draft.title}</h3>
           <p>{draft.subtitle}</p>
@@ -45,7 +51,7 @@ export function PrivateDraftScreen({
     </>
   ) : (
     <>
-      <section className="hero-card">
+      <section className="hero-card private-draft-hero private-draft-hero--review">
         <div className="hero-card__content">
           <span className="section-badge">저장 전 확인</span>
           <h2 className="hero-card__title">비공개로 마무리하세요</h2>
@@ -55,20 +61,31 @@ export function PrivateDraftScreen({
             <p className="publish-note">초안을 정리하는 중이에요.</p>
           ) : null}
         </div>
+
+        {draft.coverPhoto != null ? (
+          <figure className="private-draft-hero__cover">
+            <img src={draft.coverPhoto.previewUrl} alt={`${draft.title} 대표 사진`} loading="lazy" />
+          </figure>
+        ) : null}
       </section>
 
       <section className="panel-card">
         <div className="publish-layout">
-          {draft.coverPhoto != null ? (
-            <figure className="publish-cover">
-              <img src={draft.coverPhoto.previewUrl} alt={`${draft.title} 대표 사진`} loading="lazy" />
-            </figure>
-          ) : null}
-
           <div className="publish-meta">
             <span className="path-chip">Private only</span>
             <h3>{draft.title}</h3>
             <p>{draft.subtitle}</p>
+
+            <div className="publish-review-stats">
+              <article className="metric-card">
+                <span>사진</span>
+                <strong>{photoCount}장</strong>
+              </article>
+              <article className="metric-card">
+                <span>모먼트</span>
+                <strong>{draft.timeline.length}개</strong>
+              </article>
+            </div>
 
             <div className="info-grid">
               <article className="info-card">

@@ -62,68 +62,73 @@ export function UploadScreen({
           </div>
         ) : hasPhotos ? (
           <>
-            <div className="upload-selection-header">
-              <div>
-                <p className="section-heading__eyebrow">선택 결과</p>
-                <h3>{formatCount(photos.length, '장 준비됐어요')}</h3>
-              </div>
-
-              <button
-                className="upload-panel__action"
-                disabled={isPickingPhotos}
-                type="button"
-                onClick={onPickPhotos}
-              >
-                다시 고르기
-              </button>
-            </div>
-
-            <div className="upload-panel__chips">
-              <span className="stat-pill">{formatCount(photos.length, '장')}</span>
-              {sourceLabel != null ? <span className="feature-chip">{sourceLabel}</span> : null}
-            </div>
-
-            <p className="helper-copy">사진은 공개하지 않고 미리보기로만 사용해요.</p>
-
-            {isPickingPhotos ? (
-              <div aria-live="polite" className="upload-feedback upload-feedback--loading" role="status">
-                <Loader label="새 사진을 확인하는 중이에요." size="small" />
-              </div>
-            ) : null}
-
-            {selectedStateErrorMessage != null ? (
-              <div className="upload-feedback upload-feedback--error" role="alert">
-                <div className="upload-feedback__copy">
-                  <strong>새 사진을 불러오지 못했어요</strong>
-                  <p>{selectedStateErrorMessage}</p>
+            <div className="upload-selected-surface">
+              <div className="upload-selection-header">
+                <div>
+                  <p className="section-heading__eyebrow">선택 결과</p>
+                  <h3>{formatCount(photos.length, '장 준비됐어요')}</h3>
                 </div>
 
-                <button className="upload-feedback__action" type="button" onClick={onPickPhotos}>
-                  다시 시도
+                <button
+                  className="upload-panel__action"
+                  disabled={isPickingPhotos}
+                  type="button"
+                  onClick={onPickPhotos}
+                >
+                  다시 고르기
                 </button>
               </div>
-            ) : null}
 
-            <div className="upload-grid" aria-label="선택한 사진 미리보기">
-              {previewPhotos.map((photo, index) => (
-                <figure className="upload-tile" key={photo.id}>
-                  <img src={photo.previewUrl} alt={`업로드한 사진 ${index + 1}`} loading="lazy" />
-                </figure>
-              ))}
+              <div className="upload-panel__chips">
+                <span className="stat-pill">{formatCount(photos.length, '장')}</span>
+                {sourceLabel != null ? <span className="feature-chip">{sourceLabel}</span> : null}
+              </div>
 
-              {remainingPhotos > 0 ? (
-                <div className="upload-tile upload-tile--more" aria-label={`추가 사진 ${remainingPhotos}장`}>
-                  <strong>+{remainingPhotos}</strong>
-                  <span>더 있어요</span>
+              <p className="helper-copy">사진은 공개하지 않고 미리보기로만 사용해요.</p>
+
+              {isPickingPhotos ? (
+                <div aria-live="polite" className="upload-feedback upload-feedback--loading" role="status">
+                  <Loader label="새 사진을 확인하는 중이에요." size="small" />
                 </div>
               ) : null}
+
+              {selectedStateErrorMessage != null ? (
+                <div className="upload-feedback upload-feedback--error" role="alert">
+                  <div className="upload-feedback__copy">
+                    <strong>새 사진을 불러오지 못했어요</strong>
+                    <p>{selectedStateErrorMessage}</p>
+                  </div>
+
+                  <button className="upload-feedback__action" type="button" onClick={onPickPhotos}>
+                    다시 시도
+                  </button>
+                </div>
+              ) : null}
+
+              <div className="upload-grid" aria-label="선택한 사진 미리보기">
+                {previewPhotos.map((photo, index) => (
+                  <figure className="upload-tile" key={photo.id}>
+                    <img src={photo.previewUrl} alt={`업로드한 사진 ${index + 1}`} loading="lazy" />
+                  </figure>
+                ))}
+
+                {remainingPhotos > 0 ? (
+                  <div className="upload-tile upload-tile--more" aria-label={`추가 사진 ${remainingPhotos}장`}>
+                    <strong>+{remainingPhotos}</strong>
+                    <span>더 있어요</span>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </>
         ) : (
           <div className="upload-state upload-empty-state">
-            <span aria-hidden="true" className="upload-state__icon">
-              +
-            </span>
+            <div className="upload-empty-state__gallery" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
             <div className="upload-state__copy">
               <h3>사진을 선택하세요</h3>
               <p>제목, 대표 사진, 모먼트는 다음 단계에서 정리해요.</p>
